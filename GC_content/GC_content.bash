@@ -10,13 +10,10 @@ cp -r -p ../*.snp.vcf .
 module load BCFtools
 module load BEDTools
 
-
 ### checking the number of variants:
-
 grep -c '^[^#]' *.vcf > checking_number_variants.txt
 
 ### Prepare the genomic_region_file:
-
 for i in *.vcf;do
 bcftools query -f '%CHROM %POS\n' "$i" > "${i/%.vcf/.bed}"
 done
@@ -24,7 +21,6 @@ done
 for i in *.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
 done
-
 
 for i in *.tab.bed; do
 cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
@@ -43,7 +39,6 @@ for i in *.step2.bed; do
     awk '$3+=5' "$i" > "${i/%.step2.bed/.step3.bed}"
 done
 
-
 for i in *.step3.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3.bed/.final.bed}"
 done
@@ -56,10 +51,10 @@ rm *.step3.bed
 rm *.snp.bed
 
 ### Calculate GC-content per region:
-
 for i in *.final.bed; do
 bedtools nuc -fi ../c_elegans.PRJNA13758.WS263.genomic.fa -bed "$i" > "${i/%.bed/.GC.txt}"
 done
 
-
 rm *.final.bed
+
+#End
