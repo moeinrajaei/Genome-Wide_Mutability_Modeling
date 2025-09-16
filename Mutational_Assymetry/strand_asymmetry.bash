@@ -99,8 +99,11 @@ mkdir whole
 cd whole
 cp -r -p ../*.recode.vcf .
 
-
-### MR here
+## rare
+mkdir rare
+cd rare 
+cp -r -p ../rare_reverse.recode.vcf .
+cp -r -p ../rare_forward.recode.vcf .
 
 #rare_reverse 
 mkdir reverse
@@ -127,6 +130,10 @@ cut -f -3 *.ts_tv.txt > rare_reverse_ts_tv.txt
 paste *.type.txt > rare_reverse_BS_type.txt
 
 ls *.vcf > rare.reverse.txt
+
+rm *.type.txt
+rm *.ts_tv.txt
+rm *.stats.txt
 
 #rare_forward
 cd ..
@@ -156,7 +163,11 @@ paste *.type.txt > rare_forward_BS_type.txt
 
 ls *.vcf > rare.forward.txt
 
-#mev
+rm *.type.txt
+rm *.ts_tv.txt
+rm *.stats.txt
+
+##mev
 cd ../..
 
 mkdir mev
@@ -190,6 +201,10 @@ paste *.type.txt > mev_reverse_BS_type.txt
 
 ls *.vcf > mev.reverse.txt
 
+rm *.type.txt
+rm *.ts_tv.txt
+rm *.stats.txt
+
 #mev_forward:
 cd ..
 mkdir forward
@@ -217,6 +232,10 @@ cut -f -3 *.ts_tv.txt > mev_forward_ts_tv.txt
 paste *.type.txt > mev_forward_BS_type.txt
 
 ls *.vcf > mev.forward.txt
+
+rm *.type.txt
+rm *.ts_tv.txt
+rm *.stats.txt
 
 #N2
 cd ../..
@@ -252,11 +271,14 @@ paste *.type.txt > N2_reverse_BS_type.txt
 
 ls *.vcf > N2.reverse.txt
 
+rm *.type.txt
+rm *.ts_tv.txt
+rm *.stats.txt
+
 #N2_forward:
 cd ..
 mkdir forward
 cd forward
-
 
 for sample in `bcftools query -l ../N2_forward.recode.vcf`; do
     bcftools view -c1 -Ov -s $sample -o $sample.vcf ../N2_forward.recode.vcf
@@ -280,6 +302,9 @@ paste *.type.txt > N2_forward_BS_type.txt
 
 ls *.vcf > N2.forward.txt
 
+rm *.type.txt
+rm *.ts_tv.txt
+rm *.stats.txt
 
 #PB306
 cd ../..
@@ -289,7 +314,7 @@ cd PB306
 cp -r -p ../PB306_reverse.recode.vcf .
 cp -r -p ../PB306_forward.recode.vcf .
 
-#mev_reverse
+#PB306_reverse
 mkdir reverse
 cd reverse
 
@@ -315,7 +340,11 @@ paste *.type.txt > PB306_reverse_BS_type.txt
 
 ls *.vcf > PB306.reverse.txt
 
-#mev_forward:
+rm *.type.txt
+rm *.ts_tv.txt
+rm *.stats.txt
+
+#PB306_forward:
 cd ..
 mkdir forward
 cd forward
@@ -342,490 +371,11 @@ cut -f -3 *.ts_tv.txt > PB306_forward_ts_tv.txt
 paste *.type.txt > PB306_forward_BS_type.txt
 
 ls *.vcf > PB306.forward.txt
+
+rm *.type.txt
+rm *.ts_tv.txt
+rm *.stats.txt
+
+###MR_Here
 # then the files were copied to an excel file named "Base-sub spectra.xlsx"
-
-
-### extracting the variants(SNVs) from mononucleotides run:
-#mev_reverse
-cd /vast/palmer/scratch/townsend/mr2683/project/test/whole/mev/reverse
-mkdir mono
-cd mono
-cp -r -p ../*.vcf .
-
-
-cp -r -p /vast/palmer/scratch/townsend/mr2683/project/test/mono.5bp.final.bed .
-
-for i in *.vcf; do
-vcftools --vcf "$i" --extract-FORMAT-info GT --bed mono.5bp.final.bed --out "${i/%.vcf/.vcf.mono.5bp}";
-done
-
-for i in *.vcf.mono.5bp.GT.FORMAT; do 
-cut -f1,2 "$i" > "${i/%.GT.FORMAT/.GT.FORMAT.bed}"
-done
-
-for i in *.mono.5bp.GT.FORMAT.bed; do
-    x=`basename $i .mono.5bp.GT.FORMAT.bed`
-    vcftools --vcf "$x" --recode --out "${i/%.mono.5bp.GT.FORMAT.bed/.mono.5bp}" --positions "$i" --recode-INFO-all
-done
-
-rm *.vcf.mono.5bp.GT.FORMAT
-rm *.vcf.mono.5bp.GT.FORMAT.bed
-rm *.vcf.mono.5bp.log
-
-for i in *.recode.vcf; do
-bcftools stats "$i" > "${i/%.vcf/.stats.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^TSTV | cut -f 3- > "${i/%.stats.txt/.ts_tv.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^ST | cut -f 3- > "${i/%.stats.txt/.type.txt}"
-done
-
-cut -f -3 *.ts_tv.txt > mev.reverse.mono.ts_tv.txt
-
-paste *.type.txt > mev.reverse.mono.BS_type.txt
-
-rm *.type.txt
-rm *.ts_tv.txt
-rm *.stats.txt
-
-ls *.recode.vcf > mev.reverse.mono.txt
-
-#mev_forward:
-cd /vast/palmer/scratch/townsend/mr2683/project/test/whole/mev/forward
-mkdir mono
-cd mono
-cp -r -p ../*.vcf .
-
-
-cp -r -p /vast/palmer/scratch/townsend/mr2683/project/test/mono.5bp.final.bed .
-
-for i in *.vcf; do
-vcftools --vcf "$i" --extract-FORMAT-info GT --bed mono.5bp.final.bed --out "${i/%.vcf/.vcf.mono.5bp}";
-done
-
-for i in *.vcf.mono.5bp.GT.FORMAT; do 
-cut -f1,2 "$i" > "${i/%.GT.FORMAT/.GT.FORMAT.bed}"
-done
-
-for i in *.mono.5bp.GT.FORMAT.bed; do
-    x=`basename $i .mono.5bp.GT.FORMAT.bed`
-    vcftools --vcf "$x" --recode --out "${i/%.mono.5bp.GT.FORMAT.bed/.mono.5bp}" --positions "$i" --recode-INFO-all
-done
-
-rm *.vcf.mono.5bp.GT.FORMAT
-rm *.vcf.mono.5bp.GT.FORMAT.bed
-rm *.vcf.mono.5bp.log
-
-for i in *.recode.vcf; do
-bcftools stats "$i" > "${i/%.vcf/.stats.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^TSTV | cut -f 3- > "${i/%.stats.txt/.ts_tv.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^ST | cut -f 3- > "${i/%.stats.txt/.type.txt}"
-done
-
-cut -f -3 *.ts_tv.txt > mev.forward.mono.ts_tv.txt
-
-paste *.type.txt > mev.forward.mono.BS_type.txt
-
-rm *.type.txt
-rm *.ts_tv.txt
-rm *.stats.txt
-
-ls *.recode.vcf > mev.forward.mono.txt
-
-#N2_reverse
-cd /vast/palmer/scratch/townsend/mr2683/project/test/whole/N2/reverse
-mkdir mono
-cd mono
-cp -r -p ../*.vcf .
-
-
-cp -r -p /vast/palmer/scratch/townsend/mr2683/project/test/mono.5bp.final.bed .
-
-for i in *.vcf; do
-vcftools --vcf "$i" --extract-FORMAT-info GT --bed mono.5bp.final.bed --out "${i/%.vcf/.vcf.mono.5bp}";
-done
-
-for i in *.vcf.mono.5bp.GT.FORMAT; do 
-cut -f1,2 "$i" > "${i/%.GT.FORMAT/.GT.FORMAT.bed}"
-done
-
-for i in *.mono.5bp.GT.FORMAT.bed; do
-    x=`basename $i .mono.5bp.GT.FORMAT.bed`
-    vcftools --vcf "$x" --recode --out "${i/%.mono.5bp.GT.FORMAT.bed/.mono.5bp}" --positions "$i" --recode-INFO-all
-done
-
-rm *.vcf.mono.5bp.GT.FORMAT
-rm *.vcf.mono.5bp.GT.FORMAT.bed
-rm *.vcf.mono.5bp.log
-
-for i in *.recode.vcf; do
-bcftools stats "$i" > "${i/%.vcf/.stats.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^TSTV | cut -f 3- > "${i/%.stats.txt/.ts_tv.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^ST | cut -f 3- > "${i/%.stats.txt/.type.txt}"
-done
-
-cut -f -3 *.ts_tv.txt > N2.reverse.mono.ts_tv.txt
-
-paste *.type.txt > N2.reverse.mono.BS_type.txt
-
-rm *.type.txt
-rm *.ts_tv.txt
-rm *.stats.txt
-
-ls *.recode.vcf > N2.reverse.mono.txt
-
-#N2_forward:
-cd /vast/palmer/scratch/townsend/mr2683/project/test/whole/N2/forward
-mkdir mono
-cd mono
-cp -r -p ../*.vcf .
-
-
-cp -r -p /vast/palmer/scratch/townsend/mr2683/project/test/mono.5bp.final.bed .
-
-for i in *.vcf; do
-vcftools --vcf "$i" --extract-FORMAT-info GT --bed mono.5bp.final.bed --out "${i/%.vcf/.vcf.mono.5bp}";
-done
-
-for i in *.vcf.mono.5bp.GT.FORMAT; do 
-cut -f1,2 "$i" > "${i/%.GT.FORMAT/.GT.FORMAT.bed}"
-done
-
-for i in *.mono.5bp.GT.FORMAT.bed; do
-    x=`basename $i .mono.5bp.GT.FORMAT.bed`
-    vcftools --vcf "$x" --recode --out "${i/%.mono.5bp.GT.FORMAT.bed/.mono.5bp}" --positions "$i" --recode-INFO-all
-done
-
-rm *.vcf.mono.5bp.GT.FORMAT
-rm *.vcf.mono.5bp.GT.FORMAT.bed
-rm *.vcf.mono.5bp.log
-
-for i in *.recode.vcf; do
-bcftools stats "$i" > "${i/%.vcf/.stats.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^TSTV | cut -f 3- > "${i/%.stats.txt/.ts_tv.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^ST | cut -f 3- > "${i/%.stats.txt/.type.txt}"
-done
-
-cut -f -3 *.ts_tv.txt > N2.forward.mono.ts_tv.txt
-
-paste *.type.txt > N2.forward.mono.BS_type.txt
-
-rm *.type.txt
-rm *.ts_tv.txt
-rm *.stats.txt
-
-ls *.recode.vcf > N2.forward.mono.txt
-
-#PB306_reverse
-cd /vast/palmer/scratch/townsend/mr2683/project/test/whole/PB306/reverse
-mkdir mono
-cd mono
-cp -r -p ../*.vcf .
-
-
-cp -r -p /vast/palmer/scratch/townsend/mr2683/project/test/mono.5bp.final.bed .
-
-for i in *.vcf; do
-vcftools --vcf "$i" --extract-FORMAT-info GT --bed mono.5bp.final.bed --out "${i/%.vcf/.vcf.mono.5bp}";
-done
-
-for i in *.vcf.mono.5bp.GT.FORMAT; do 
-cut -f1,2 "$i" > "${i/%.GT.FORMAT/.GT.FORMAT.bed}"
-done
-
-for i in *.mono.5bp.GT.FORMAT.bed; do
-    x=`basename $i .mono.5bp.GT.FORMAT.bed`
-    vcftools --vcf "$x" --recode --out "${i/%.mono.5bp.GT.FORMAT.bed/.mono.5bp}" --positions "$i" --recode-INFO-all
-done
-
-rm *.vcf.mono.5bp.GT.FORMAT
-rm *.vcf.mono.5bp.GT.FORMAT.bed
-rm *.vcf.mono.5bp.log
-
-for i in *.recode.vcf; do
-bcftools stats "$i" > "${i/%.vcf/.stats.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^TSTV | cut -f 3- > "${i/%.stats.txt/.ts_tv.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^ST | cut -f 3- > "${i/%.stats.txt/.type.txt}"
-done
-
-cut -f -3 *.ts_tv.txt > PB306.reverse.mono.ts_tv.txt
-
-paste *.type.txt > PB306.reverse.mono.BS_type.txt
-
-rm *.type.txt
-rm *.ts_tv.txt
-rm *.stats.txt
-
-ls *.recode.vcf > PB306.reverse.mono.txt
-
-#PB306_forward:
-cd /vast/palmer/scratch/townsend/mr2683/project/test/whole/PB306/forward
-mkdir mono
-cd mono
-cp -r -p ../*.vcf .
-
-
-cp -r -p /vast/palmer/scratch/townsend/mr2683/project/test/mono.5bp.final.bed .
-
-for i in *.vcf; do
-vcftools --vcf "$i" --extract-FORMAT-info GT --bed mono.5bp.final.bed --out "${i/%.vcf/.vcf.mono.5bp}";
-done
-
-for i in *.vcf.mono.5bp.GT.FORMAT; do 
-cut -f1,2 "$i" > "${i/%.GT.FORMAT/.GT.FORMAT.bed}"
-done
-
-for i in *.mono.5bp.GT.FORMAT.bed; do
-    x=`basename $i .mono.5bp.GT.FORMAT.bed`
-    vcftools --vcf "$x" --recode --out "${i/%.mono.5bp.GT.FORMAT.bed/.mono.5bp}" --positions "$i" --recode-INFO-all
-done
-
-rm *.vcf.mono.5bp.GT.FORMAT
-rm *.vcf.mono.5bp.GT.FORMAT.bed
-rm *.vcf.mono.5bp.log
-
-for i in *.recode.vcf; do
-bcftools stats "$i" > "${i/%.vcf/.stats.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^TSTV | cut -f 3- > "${i/%.stats.txt/.ts_tv.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^ST | cut -f 3- > "${i/%.stats.txt/.type.txt}"
-done
-
-cut -f -3 *.ts_tv.txt > PB306.forward.mono.ts_tv.txt
-
-paste *.type.txt > PB306.forward.mono.BS_type.txt
-
-rm *.type.txt
-rm *.ts_tv.txt
-rm *.stats.txt
-
-ls *.recode.vcf > PB306.forward.mono.txt
-
-#rare_reverse
-cd /vast/palmer/scratch/townsend/mr2683/project/test/whole/rare/reverse
-mkdir mono
-cd mono
-cp -r -p ../*.vcf .
-
-
-cp -r -p /vast/palmer/scratch/townsend/mr2683/project/test/mono.5bp.final.bed .
-
-for i in *.vcf; do
-vcftools --vcf "$i" --extract-FORMAT-info GT --bed mono.5bp.final.bed --out "${i/%.vcf/.vcf.mono.5bp}";
-done
-
-for i in *.vcf.mono.5bp.GT.FORMAT; do 
-cut -f1,2 "$i" > "${i/%.GT.FORMAT/.GT.FORMAT.bed}"
-done
-
-for i in *.mono.5bp.GT.FORMAT.bed; do
-    x=`basename $i .mono.5bp.GT.FORMAT.bed`
-    vcftools --vcf "$x" --recode --out "${i/%.mono.5bp.GT.FORMAT.bed/.mono.5bp}" --positions "$i" --recode-INFO-all
-done
-
-rm *.vcf.mono.5bp.GT.FORMAT
-rm *.vcf.mono.5bp.GT.FORMAT.bed
-rm *.vcf.mono.5bp.log
-
-for i in *.recode.vcf; do
-bcftools stats "$i" > "${i/%.vcf/.stats.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^TSTV | cut -f 3- > "${i/%.stats.txt/.ts_tv.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^ST | cut -f 3- > "${i/%.stats.txt/.type.txt}"
-done
-
-cut -f -3 *.ts_tv.txt > rare.reverse.mono.ts_tv.txt
-
-paste *.type.txt > rare.reverse.mono.BS_type.txt
-
-rm *.type.txt
-rm *.ts_tv.txt
-rm *.stats.txt
-
-ls *.recode.vcf > rare.reverse.mono.txt
-
-#rare_forward:
-cd /vast/palmer/scratch/townsend/mr2683/project/test/whole/rare/forward
-mkdir mono
-cd mono
-cp -r -p ../*.vcf .
-
-
-cp -r -p /vast/palmer/scratch/townsend/mr2683/project/test/mono.5bp.final.bed .
-
-for i in *.vcf; do
-vcftools --vcf "$i" --extract-FORMAT-info GT --bed mono.5bp.final.bed --out "${i/%.vcf/.vcf.mono.5bp}";
-done
-
-for i in *.vcf.mono.5bp.GT.FORMAT; do 
-cut -f1,2 "$i" > "${i/%.GT.FORMAT/.GT.FORMAT.bed}"
-done
-
-for i in *.mono.5bp.GT.FORMAT.bed; do
-    x=`basename $i .mono.5bp.GT.FORMAT.bed`
-    vcftools --vcf "$x" --recode --out "${i/%.mono.5bp.GT.FORMAT.bed/.mono.5bp}" --positions "$i" --recode-INFO-all
-done
-
-rm *.vcf.mono.5bp.GT.FORMAT
-rm *.vcf.mono.5bp.GT.FORMAT.bed
-rm *.vcf.mono.5bp.log
-
-for i in *.recode.vcf; do
-bcftools stats "$i" > "${i/%.vcf/.stats.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^TSTV | cut -f 3- > "${i/%.stats.txt/.ts_tv.txt}"
-done
-
-for i in *.stats.txt; do
-cat "$i" | grep ^ST | cut -f 3- > "${i/%.stats.txt/.type.txt}"
-done
-
-cut -f -3 *.ts_tv.txt > rare.forward.mono.ts_tv.txt
-
-paste *.type.txt > rare.forward.mono.BS_type.txt
-
-rm *.type.txt
-rm *.ts_tv.txt
-rm *.stats.txt
-
-ls *.recode.vcf > rare.forward.mono.txt
-
-
-# then the files were copied to an excel file named "Base-sub spectra.xlsx" and the rest of analysis were done there.
-
-####################################################################
-
-#I did the same thing for indels as above:
-vcftools --vcf mev.indel.vcf --recode --out mev_forward_indel --positions mev_forward.bed --recode-INFO-all
-
-mkdir mev_1_1
-mkdir mev_2_5
-mkdir mev_6_10
-mkdir mev_11_20
-
-for sample in `bcftools query -l ../mev_forward_indel.recode.1_1.indels.vcf`; do
-    bcftools view -c1 -Ov -s $sample -o $sample.vcf ../mev_forward_indel.recode.1_1.indels.vcf
-done
-
-#########################################################################################################
-
-for i in *.recode.vcf; do
-    java -Xmx8g -jar /apps/gatk/4.1.4.0/gatk-package-4.1.4.0-local.jar SelectVariants \
-    -V "$i" \
-    -R /blue/baer/share/moeinraja/reference_WS263/c_elegans.PRJNA13758.WS263.genomic.fa \
-    --select-type-to-include INDEL --min-indel-size 1 --max-indel-size 1 \
-    -O "${i/%.vcf/.1_1.indels.vcf}" \
-    --exclude-non-variants true
-done
-
-for i in *.recode.vcf; do
-    java -Xmx8g -jar /apps/gatk/4.1.4.0/gatk-package-4.1.4.0-local.jar SelectVariants \
-    -V "$i" \
-    -R /blue/baer/share/moeinraja/reference_WS263/c_elegans.PRJNA13758.WS263.genomic.fa \
-    --select-type-to-include INDEL --min-indel-size 6 --max-indel-size 10 \
-    -O "${i/%.vcf/.6_10.indels.vcf}" \
-    --exclude-non-variants true
-done
-
-for i in *.recode.vcf; do
-    java -Xmx8g -jar /apps/gatk/4.1.4.0/gatk-package-4.1.4.0-local.jar SelectVariants \
-    -V "$i" \
-    -R /blue/baer/share/moeinraja/reference_WS263/c_elegans.PRJNA13758.WS263.genomic.fa \
-    --select-type-to-include INDEL --min-indel-size 11 --max-indel-size 20 \
-    -O "${i/%.vcf/.11_20.indels.vcf}" \
-    --exclude-non-variants true
-done
-
-for i in *.recode.vcf; do
-    java -Xmx8g -jar /apps/gatk/4.1.4.0/gatk-package-4.1.4.0-local.jar SelectVariants \
-    -V "$i" \
-    -R /blue/baer/share/moeinraja/reference_WS263/c_elegans.PRJNA13758.WS263.genomic.fa \
-    --select-type-to-include INDEL --min-indel-size 2 --max-indel-size 5 \
-    -O "${i/%.vcf/.2_5.indels.vcf}" \
-    --exclude-non-variants true
-done
-
-
-
-
-
-
-for sample in `bcftools query -l ../rare_forward_11_20.recode.vcf.mono.5bp.recode.vcf`; do
-    bcftools view -c1 -Ov -s $sample -o $sample.vcf ../rare_forward_11_20.recode.vcf.mono.5bp.recode.vcf
-done
-
-
-
-
-for i in *.vcf; do
-vcf2bed --insertions < "$i" | wc -l > "${i/%.vcf/.insertions_count.txt}"
-done
-
-for i in *.vcf; do
-vcf2bed --deletions < "$i" | wc -l > "${i/%.vcf/.deletions_count.txt}"
-done
-
-cut -f -3 *.insertions_count.txt > insertions_count.txt
-
-cut -f -3 *.deletions_count.txt > deletions_count.txt
-
-rm *.insertions_count.txt
-rm *.deletions_count.txt
-
-ls *.vcf > list.txt
-
-# The same thing was done for indel and the indel data are stored in "indel_spectra.xlsx" file.
-
-
-
-
-
-
-
-
-
-
-
-
-
 
