@@ -24,7 +24,6 @@ for i in *.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
 done
 
-
 for i in *.tab.bed; do
 cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
 done
@@ -41,7 +40,6 @@ done
 for i in *.step2.bed; do
     awk '$3+=5' "$i" > "${i/%.step2.bed/.step3.bed}"
 done
-
 
 for i in *.step3.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3.bed/.final.bed}"
@@ -62,9 +60,7 @@ done
 
 rm *.final.bed
 
-
 ### 100bp:
-
 ## Prepare the genomic_region_file:
 
 for i in *.vcf;do
@@ -74,7 +70,6 @@ done
 for i in *.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
 done
-
 
 for i in *.tab.bed; do
 cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
@@ -92,7 +87,6 @@ done
 for i in *.step2.bed; do
     awk '$3+=50' "$i" > "${i/%.step2.bed/.step3.bed}"
 done
-
 
 for i in *.step3.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3.bed/.final.bed}"
@@ -113,9 +107,7 @@ done
 
 rm *.final.bed
 
-
 ### 1k_bp
-
 ## Prepare the genomic_region_file:
 
 for i in *.vcf;do
@@ -125,7 +117,6 @@ done
 for i in *.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
 done
-
 
 for i in *.tab.bed; do
 cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
@@ -143,7 +134,6 @@ done
 for i in *.step2.bed; do
     awk '$3+=500' "$i" > "${i/%.step2.bed/.step3.bed}"
 done
-
 
 for i in *.step3.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3.bed/.final.bed}"
@@ -164,10 +154,7 @@ done
 
 rm *.final.bed
 
-
-
 ### 10k_bp
-
 ## Prepare the genomic_region_file:
 
 for i in *.vcf;do
@@ -177,7 +164,6 @@ done
 for i in *.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
 done
-
 
 for i in *.tab.bed; do
 cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
@@ -195,7 +181,6 @@ done
 for i in *.step2.bed; do
     awk '$3+=5000' "$i" > "${i/%.step2.bed/.step3.bed}"
 done
-
 
 for i in *.step3.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3.bed/.final.bed}"
@@ -216,10 +201,7 @@ done
 
 rm *.final.bed
 
-
-
 ### 100k_bp
-
 ## Prepare the genomic_region_file:
 
 for i in *.vcf;do
@@ -229,7 +211,6 @@ done
 for i in *.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
 done
-
 
 for i in *.tab.bed; do
 cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
