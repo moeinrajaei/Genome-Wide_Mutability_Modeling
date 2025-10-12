@@ -221,9 +221,9 @@ for i in *.tab.bed; do
     paste "$i" "$file.txt" > "${i/%.tab.bed/.step1.bed}"
 done
 
-# step2: subtract 50001 from col2, but skip if it would go < 0
+# step2: subtract 50001 from col2, but set to 0 if result < 0
 for i in *.step1.bed; do
-    awk 'BEGIN{OFS="\t"} { tmp=$2-50001; if (tmp<0) next; $2=tmp; print }' "$i" > "${i/%.step1.bed/.step2.bed}"
+    awk 'BEGIN{OFS="\t"} { tmp=$2-50001; if (tmp<0) tmp=0; $2=tmp; print }' "$i" > "${i/%.step1.bed/.step2.bed}"
 done
 
 # step3: add 50000 to col3 (safe after filtering negatives)
