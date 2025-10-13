@@ -13,9 +13,12 @@ module load BEDTools
 ### checking the number of variants:
 grep -c '^[^#]' *.vcf > checking_number_variants.txt
 
+GENOME_FA="c_elegans.PRJNA13758.WS263.genomic.fa"
+FAI="${GENOME_FA}.fai"   
+
+
 ###10bp
 ## Prepare the genomic_region_file:
-
 for i in *.vcf;do
 bcftools query -f '%CHROM %POS\n' "$i" > "${i/%.vcf/.bed}"
 done
@@ -53,16 +56,14 @@ rm *.step3.bed
 rm *.snp.bed
 
 ## Calculate GC-content per region:
-
 for i in *.final.bed; do
-bedtools nuc -fi ../c_elegans.PRJNA13758.WS263.genomic.fa -bed "$i" > "${i/%.bed/.GC_10bp.txt}"
+bedtools nuc -fi "$GENOME_FA" -bed "$i" > "${i/%.bed/.GC_10bp.txt}"
 done
 
 rm *.final.bed
 
 ### 100bp:
 ## Prepare the genomic_region_file:
-
 for i in *.vcf;do
 bcftools query -f '%CHROM %POS\n' "$i" > "${i/%.vcf/.bed}"
 done
@@ -80,8 +81,9 @@ for i in *.tab.bed; do
     paste "$i" "$file.txt" > "${i/%.tab.bed/.step1.bed}"
 done
 
+# step2: subtract 51 from col2, but set to 0 if result < 0
 for i in *.step1.bed; do
-    awk '$2-=51' "$i" > "${i/%.step1.bed/.step2.bed}"
+    awk 'BEGIN{OFS="\t"} { tmp=$2-51; if (tmp<0) tmp=0; $2=tmp; print }' "$i" > "${i/%.step1.bed/.step2.bed}"
 done
 
 for i in *.step2.bed; do
@@ -100,16 +102,14 @@ rm *.step3.bed
 rm *.snp.bed
 
 ## Calculate GC-content per region:
-
 for i in *.final.bed; do
-bedtools nuc -fi ../c_elegans.PRJNA13758.WS263.genomic.fa -bed "$i" > "${i/%.bed/.GC_100bp.txt}"
+bedtools nuc -fi "$GENOME_FA" -bed "$i" > "${i/%.bed/.GC_100bp.txt}"
 done
 
 rm *.final.bed
 
 ### 1k_bp
 ## Prepare the genomic_region_file:
-
 for i in *.vcf;do
 bcftools query -f '%CHROM %POS\n' "$i" > "${i/%.vcf/.bed}"
 done
@@ -127,12 +127,38 @@ for i in *.tab.bed; do
     paste "$i" "$file.txt" > "${i/%.tab.bed/.step1.bed}"
 done
 
+
+# step2: subtract 501 from col2, but set to 0 if result < 0
 for i in *.step1.bed; do
-    awk '$2-=501' "$i" > "${i/%.step1.bed/.step2.bed}"
+    awk 'BEGIN{OFS="\t"} { tmp=$2-501; if (tmp<0) tmp=0; $2=tmp; print }' "$i" > "${i/%.step1.bed/.step2.bed}"
 done
 
+# step3: add 500 to col3; cap (and fix) to chromosome size from .fai
 for i in *.step2.bed; do
-    awk '$3+=500' "$i" > "${i/%.step2.bed/.step3.bed}"
+    awk -v OFS='\t' '
+        NR==FNR { sz[$1]=$2; next }                  # read chrom sizes from .fai (field2)
+        {
+          max = sz[$1];
+          if (max == "" ) {                          # chrom not found in .fai
+            printf("WARNING: no size for %s\n", $1) > "/dev/stderr";
+            next;
+          }
+
+          # clamp start into [0, max-1]
+          if ($2 < 0) $2 = 0;
+          if ($2 >= max) $2 = (max>0 ? max-1 : 0);
+
+          # extend end by 500, then cap at max (BED end is 0-based, half-open)
+          end = $3 + 500;
+          if (end > max) end = max;
+          if (end < 0) end = 0;                      # paranoia guard
+          $3 = end;
+
+          # ensure start < end; if not, make a 1bp interval at the end cap
+          if ($2 >= $3) $2 = ($3 > 0 ? $3 - 1 : 0);
+
+          print
+        }' "$FAI" "$i" > "${i/%.step2.bed/.step3.bed}"
 done
 
 for i in *.step3.bed; do
@@ -147,16 +173,14 @@ rm *.step3.bed
 rm *.snp.bed
 
 ## Calculate GC-content per region:
-
 for i in *.final.bed; do
-bedtools nuc -fi ../c_elegans.PRJNA13758.WS263.genomic.fa -bed "$i" > "${i/%.bed/.GC_1k_bp.txt}"
+bedtools nuc -fi "$GENOME_FA" -bed "$i" > "${i/%.bed/.GC_1k_bp.txt}"
 done
 
 rm *.final.bed
 
 ### 10k_bp
 ## Prepare the genomic_region_file:
-
 for i in *.vcf;do
 bcftools query -f '%CHROM %POS\n' "$i" > "${i/%.vcf/.bed}"
 done
@@ -174,12 +198,37 @@ for i in *.tab.bed; do
     paste "$i" "$file.txt" > "${i/%.tab.bed/.step1.bed}"
 done
 
+# step2: subtract 5001 from col2, but set to 0 if result < 0
 for i in *.step1.bed; do
-    awk '$2-=5001' "$i" > "${i/%.step1.bed/.step2.bed}"
+    awk 'BEGIN{OFS="\t"} { tmp=$2-5001; if (tmp<0) tmp=0; $2=tmp; print }' "$i" > "${i/%.step1.bed/.step2.bed}"
 done
 
+# step3: add 5000 to col3; cap (and fix) to chromosome size from .fai
 for i in *.step2.bed; do
-    awk '$3+=5000' "$i" > "${i/%.step2.bed/.step3.bed}"
+    awk -v OFS='\t' '
+        NR==FNR { sz[$1]=$2; next }                  # read chrom sizes from .fai (field2)
+        {
+          max = sz[$1];
+          if (max == "" ) {                          # chrom not found in .fai
+            printf("WARNING: no size for %s\n", $1) > "/dev/stderr";
+            next;
+          }
+
+          # clamp start into [0, max-1]
+          if ($2 < 0) $2 = 0;
+          if ($2 >= max) $2 = (max>0 ? max-1 : 0);
+
+          # extend end by 5000, then cap at max (BED end is 0-based, half-open)
+          end = $3 + 5000;
+          if (end > max) end = max;
+          if (end < 0) end = 0;                      # paranoia guard
+          $3 = end;
+
+          # ensure start < end; if not, make a 1bp interval at the end cap
+          if ($2 >= $3) $2 = ($3 > 0 ? $3 - 1 : 0);
+
+          print
+        }' "$FAI" "$i" > "${i/%.step2.bed/.step3.bed}"
 done
 
 for i in *.step3.bed; do
@@ -194,16 +243,14 @@ rm *.step3.bed
 rm *.snp.bed
 
 ## Calculate GC-content per region:
-
 for i in *.final.bed; do
-bedtools nuc -fi ../c_elegans.PRJNA13758.WS263.genomic.fa -bed "$i" > "${i/%.bed/.GC_10k_bp.txt}"
+bedtools nuc -fi "$GENOME_FA" -bed "$i" > "${i/%.bed/.GC_10k_bp.txt}"
 done
 
 rm *.final.bed
 
 ### 100k_bp
 ## Prepare the genomic_region_file:
-
 for i in *.vcf;do
 bcftools query -f '%CHROM %POS\n' "$i" > "${i/%.vcf/.bed}"
 done
@@ -226,11 +273,35 @@ for i in *.step1.bed; do
     awk 'BEGIN{OFS="\t"} { tmp=$2-50001; if (tmp<0) tmp=0; $2=tmp; print }' "$i" > "${i/%.step1.bed/.step2.bed}"
 done
 
-# step3: add 50000 to col3 (safe after filtering negatives)
+# step3: add 50000 to col3; cap (and fix) to chromosome size from .fai
 for i in *.step2.bed; do
-    awk 'BEGIN{OFS="\t"} { $3=$3+50000; print }' "$i" > "${i/%.step2.bed/.step3.bed}"
+    awk -v OFS='\t' '
+        NR==FNR { sz[$1]=$2; next }                  # read chrom sizes from .fai (field2)
+        {
+          max = sz[$1];
+          if (max == "" ) {                          # chrom not found in .fai
+            printf("WARNING: no size for %s\n", $1) > "/dev/stderr";
+            next;
+          }
+
+          # clamp start into [0, max-1]
+          if ($2 < 0) $2 = 0;
+          if ($2 >= max) $2 = (max>0 ? max-1 : 0);
+
+          # extend end by 50000, then cap at max (BED end is 0-based, half-open)
+          end = $3 + 50000;
+          if (end > max) end = max;
+          if (end < 0) end = 0;                      # paranoia guard
+          $3 = end;
+
+          # ensure start < end; if not, make a 1bp interval at the end cap
+          if ($2 >= $3) $2 = ($3 > 0 ? $3 - 1 : 0);
+
+          print
+        }' "$FAI" "$i" > "${i/%.step2.bed/.step3.bed}"
 done
 
+# keep tabs clean
 for i in *.step3.bed; do
     awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3.bed/.final.bed}"
 done
@@ -243,11 +314,15 @@ rm *.step3.bed
 rm *.snp.bed
 
 ## Calculate GC-content per region:
-
 for i in *.final.bed; do
-bedtools nuc -fi ../c_elegans.PRJNA13758.WS263.genomic.fa -bed "$i" > "${i/%.bed/.GC_100k_bp.txt}"
+    bedtools nuc -fi "$GENOME_FA" -bed "$i" > "${i/%.bed/.GC_100k_bp.txt}"
 done
 
 rm *.final.bed
+
+# Merge all matching files:
+paste -d $'\t' $(printf "%s\n" *mev.snp.final.GC* | sort -V) > mev.snp.final.GC.tsv
+paste -d $'\t' $(printf "%s\n" *N2.snp.final.GC* | sort -V) > N2.snp.final.GC.tsv
+paste -d $'\t' $(printf "%s\n" *PB306.snp.final.GC* | sort -V) > PB306.snp.final.GC.tsv
 
 #End
