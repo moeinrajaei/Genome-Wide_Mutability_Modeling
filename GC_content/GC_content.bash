@@ -206,10 +206,10 @@ done
 # step3: add 5000 to col3; cap (and fix) to chromosome size from .fai
 for i in *.step2.bed; do
     awk -v OFS='\t' '
-        NR==FNR { sz[$1]=$2; next }                  # read chrom sizes from .fai (field2)
+        NR==FNR { sz[$1]=$2; next }                 
         {
           max = sz[$1];
-          if (max == "" ) {                          # chrom not found in .fai
+          if (max == "" ) {                        
             printf("WARNING: no size for %s\n", $1) > "/dev/stderr";
             next;
           }
@@ -221,7 +221,7 @@ for i in *.step2.bed; do
           # extend end by 5000, then cap at max (BED end is 0-based, half-open)
           end = $3 + 5000;
           if (end > max) end = max;
-          if (end < 0) end = 0;                      # paranoia guard
+          if (end < 0) end = 0;                    
           $3 = end;
 
           # ensure start < end; if not, make a 1bp interval at the end cap
@@ -276,10 +276,10 @@ done
 # step3: add 50000 to col3; cap (and fix) to chromosome size from .fai
 for i in *.step2.bed; do
     awk -v OFS='\t' '
-        NR==FNR { sz[$1]=$2; next }                  # read chrom sizes from .fai (field2)
+        NR==FNR { sz[$1]=$2; next }                  
         {
           max = sz[$1];
-          if (max == "" ) {                          # chrom not found in .fai
+          if (max == "" ) {                        
             printf("WARNING: no size for %s\n", $1) > "/dev/stderr";
             next;
           }
@@ -291,7 +291,7 @@ for i in *.step2.bed; do
           # extend end by 50000, then cap at max (BED end is 0-based, half-open)
           end = $3 + 50000;
           if (end > max) end = max;
-          if (end < 0) end = 0;                      # paranoia guard
+          if (end < 0) end = 0;                     
           $3 = end;
 
           # ensure start < end; if not, make a 1bp interval at the end cap
