@@ -84,7 +84,7 @@ vcftools --vcf mev.snp.vcf --recode --out mev_reverse --positions mev.snp.revers
 vcftools --vcf N2.snp.vcf --recode --out N2_reverse --positions N2.snp.reverse.bed --recode-INFO-all
 vcftools --vcf PB306.snp.vcf --recode --out PB306_reverse --positions PB306.snp.reverse.bed --recode-INFO-all
 
-vcftools --vcf rare.snp.vcf --recode --out rare_reverse --positions rare.snp.reverse.bed --recode-INFO-all
+vcftools --vcf rare.snp.vcf --recode --out rare_forward --positions rare.snp.forward.bed --recode-INFO-all
 vcftools --vcf mev.snp.vcf --recode --out mev_forward --positions mev.snp.forward.bed --recode-INFO-all
 vcftools --vcf N2.snp.vcf --recode --out N2_forward --positions N2.snp.forward.bed --recode-INFO-all
 vcftools --vcf PB306.snp.vcf --recode --out PB306_forward --positions PB306.snp.forward.bed --recode-INFO-all
@@ -94,7 +94,7 @@ rm *.final.bed
 rm *.wormbase.bed
 rm *.gff3.bed
 
-### base substitution type analysis for each of *.recode.vcf files(line 70-160):
+### base substitution type analysis for each of *.recode.vcf files:
 mkdir whole
 cd whole
 cp -r -p ../*.recode.vcf .
@@ -139,7 +139,6 @@ rm *.stats.txt
 cd ..
 mkdir forward
 cd forward
-
 
 for sample in `bcftools query -l ../rare_forward.recode.vcf`; do
     bcftools view -c1 -Ov -s $sample -o $sample.vcf ../rare_forward.recode.vcf
