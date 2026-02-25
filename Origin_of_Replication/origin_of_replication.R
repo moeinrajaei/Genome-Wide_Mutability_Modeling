@@ -5,7 +5,6 @@ library(dplyr)
 # Set Working Directory:
 setwd("C:/Moein/projects/Mutability/Hipergator/Origin_of_Replication")
 
-
 ###mev
 ## 1- Read data from the files into a data frame:
 bed <- read_excel("C:/Moein/projects/Mutability/Hipergator/Origin_of_Replication/Copy of Pourkarimi...Whitehouse.eLIFE.2016_SUPPL Table 1.xlsx", 
@@ -41,7 +40,6 @@ for (chr in unique_chrs) {
   results_list[[chr]] <- result_df
 }
 
-
 # Combine all the results into a single data frame
 final_result <- do.call(rbind, results_list)
 
@@ -64,7 +62,6 @@ write.csv(negative_differences, "mev_negative_differences_result.csv", row.names
 ## Read data from the files into a data frame:
 N2 <- read_excel("C:/Moein/projects/Mutability/Hipergator/Origin_of_Replication/Copy of Pourkarimi...Whitehouse.eLIFE.2016_SUPPL Table 1.xlsx", 
                  sheet = "N2")
-
 
 # Create an empty list to store the results for each combination
 results_list <- list()
@@ -110,8 +107,6 @@ max_negative_differences <- negative_differences %>%
 # Print or save max_negative_differences as needed
 write.csv(max_negative_differences, "N2_result.csv", row.names = FALSE)
 write.csv(negative_differences, "N2_negative_differences_result.csv", row.names = FALSE)
-
-
 
 ###PB306
 ## 1- Read data from the files into a data frame:
@@ -165,12 +160,10 @@ max_negative_differences <- negative_differences %>%
 write.csv(max_negative_differences, "PB306_result.csv", row.names = FALSE)
 write.csv(negative_differences, "PB306_negative_differences_result.csv", row.names = FALSE)
 
-
 ###C.snp
 ## 1- Read data from the files into a data frame:
 C.snp <- read_excel("C:/Moein/projects/Mutability/Hipergator/Origin_of_Replication/Copy of Pourkarimi...Whitehouse.eLIFE.2016_SUPPL Table 1.xlsx", 
                     sheet = "C.snp")
-
 
 # Create an empty list to store the results for each combination
 results_list <- list()
@@ -218,12 +211,10 @@ max_negative_differences <- negative_differences %>%
 write.csv(max_negative_differences, "C.snp_result.csv", row.names = FALSE)
 write.csv(negative_differences, "C.snp_negative_differences_result.csv", row.names = FALSE)
 
-
 ###E.snp
 ## 1- Read data from the files into a data frame:
 E.snp <- read_excel("C:/Moein/projects/Mutability/Hipergator/Origin_of_Replication/Copy of Pourkarimi...Whitehouse.eLIFE.2016_SUPPL Table 1.xlsx", 
                     sheet = "E.snp")
-
 
 # Create an empty list to store the results for each combination
 results_list <- list()
@@ -271,14 +262,10 @@ max_negative_differences <- negative_differences %>%
 write.csv(max_negative_differences, "E.snp_result.csv", row.names = FALSE)
 write.csv(negative_differences, "E.snp_negative_differences_result.csv", row.names = FALSE)
 
-
-
-
 ###G.snp
 ## 1- Read data from the files into a data frame:
 G.snp <- read_excel("C:/Moein/projects/Mutability/Hipergator/Origin_of_Replication/Copy of Pourkarimi...Whitehouse.eLIFE.2016_SUPPL Table 1.xlsx", 
                     sheet = "G.snp")
-
 
 # Create an empty list to store the results for each combination
 results_list <- list()
@@ -326,13 +313,10 @@ max_negative_differences <- negative_differences %>%
 write.csv(max_negative_differences, "G.snp_result.csv", row.names = FALSE)
 write.csv(negative_differences, "G.snp_negative_differences_result.csv", row.names = FALSE)
 
-
-
 ###J.snp
 ## 1- Read data from the files into a data frame:
 J.snp <- read_excel("C:/Moein/projects/Mutability/Hipergator/Origin_of_Replication/Copy of Pourkarimi...Whitehouse.eLIFE.2016_SUPPL Table 1.xlsx", 
                     sheet = "J.snp")
-
 
 # Create an empty list to store the results for each combination
 results_list <- list()
@@ -381,3 +365,4 @@ write.csv(max_negative_differences, "J.snp_result.csv", row.names = FALSE)
 write.csv(negative_differences, "J.snp_negative_differences_result.csv", row.names = FALSE)
 
 
+#End
