@@ -44,7 +44,6 @@ snp_spectrum <- snp_spectrum / sum(snp_spectrum)   # renormalize
 # --- C. elegans indel parameters---
 # Indels >20 bp excluded (146 skipped: mostly mobile elements / repeat expansions)
 # Ins/Del ratio: 734/1932 = 38.0% ins, 1198/1932 = 62.0% del
-# Note: C. elegans is strongly deletion-biased vs C. briggsae (~52/48)
 INS_PROB <- 0.3800
 DEL_PROB <- 0.6200
 
