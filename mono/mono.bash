@@ -2,7 +2,7 @@
 salloc -t 2:00:00 --mem=8G
 
 module load vcftools
-
+module load bcftools
 
 ### extracting the variants(SNVs) from mononucleotides run:
 
@@ -53,10 +53,12 @@ rm *.vcf.mono.5bp.GT.FORMAT
 rm *.vcf.mono.5bp.GT.FORMAT.bed
 rm *.vcf.mono.5bp.log
 
+
+for i in *.mono.5bp.recode.vcf;do
+bcftools query -f '%CHROM %POS\n' "$i" > "${i/%.vcf/.bed}"
+done
+
 #End
-
-
-
 
 
 
