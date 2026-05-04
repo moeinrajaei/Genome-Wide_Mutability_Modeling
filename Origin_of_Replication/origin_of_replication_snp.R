@@ -57,8 +57,8 @@ max_negative_differences <- negative_differences %>%
   summarize(Max_Negative_Difference = max(difference))
 
 # Print or save max_negative_differences as needed
-write.csv(max_negative_differences, "mev_result.csv", row.names = FALSE)
-write.csv(negative_differences, "mev_negative_differences_result.csv", row.names = FALSE)
+write.csv(max_negative_differences, "mev.snp_result.csv", row.names = FALSE)
+write.csv(negative_differences, "mev.snp_negative_differences_result.csv", row.names = FALSE)
 
 ###N2
 ## Read data from the files into a data frame:
@@ -108,8 +108,8 @@ max_negative_differences <- negative_differences %>%
   summarize(Max_Negative_Difference = max(difference))
 
 # Print or save max_negative_differences as needed
-write.csv(max_negative_differences, "N2_result.csv", row.names = FALSE)
-write.csv(negative_differences, "N2_negative_differences_result.csv", row.names = FALSE)
+write.csv(max_negative_differences, "N2.snp_result.csv", row.names = FALSE)
+write.csv(negative_differences, "N2.snp_negative_differences_result.csv", row.names = FALSE)
 
 
 
@@ -162,8 +162,8 @@ max_negative_differences <- negative_differences %>%
   summarize(Max_Negative_Difference = max(difference))
 
 # Print or save max_negative_differences as needed
-write.csv(max_negative_differences, "PB306_result.csv", row.names = FALSE)
-write.csv(negative_differences, "PB306_negative_differences_result.csv", row.names = FALSE)
+write.csv(max_negative_differences, "PB306.snp_result.csv", row.names = FALSE)
+write.csv(negative_differences, "PB306.snp_negative_differences_result.csv", row.names = FALSE)
 
 
 ###C.snp
