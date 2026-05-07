@@ -1,1 +1,35 @@
+This dataset contains genomic mutation annotations and sequence-context features for variants identified in different strains. Each row represents a single mutation event and includes genomic coordinates, local sequence composition, functional annotation, recombination information, and sequence-context metrics.
+
+Column Name Description
+Strain:	C. elegans strain in which the mutation was observed.
+Mut_type (SNV/indel):	Mutation class. SNV = single nucleotide variant; indel = insertion/deletion.
+GC_11 bp:	GC content calculated within an 11 bp window centered on the mutation site.
+GC_101 bp:	GC content calculated within a 101 bp window centered on the mutation site.
+GC_1001 bp:	GC content calculated within a 1,001 bp window centered on the mutation site.
+GC_10001 bp:	GC content calculated within a 10,001 bp window centered on the mutation site.
+GC_100001 bp:	GC content calculated within a 100,001 bp window centered on the mutation site.
+CHROM:	Chromosome containing the mutation.
+POS:	Genomic position of the mutation (1-based coordinate system).
+REF:	Reference allele at the mutation position.
+ALT:	Alternate (mutant) allele observed at the position.
+Coding context: Functional genomic region where the mutation occurs (e.g., exon, intron, UTR, intergenic region, upstream/downstream variant).
+recomb_rate:	Local recombination rate at the mutation site, measured in centimorgans per megabase (cM/Mb).
+motif_3bp_mutfirst:	3 bp sequence motif with the mutation at the first nucleotide position.
+motif_3bp_mutlast:	3 bp sequence motif with the mutation at the last nucleotide position.
+motif_3bp_mutcenter:	3 bp sequence motif centered on the mutation site.
+motif_5bp_center:	5 bp sequence motif centered on the mutation site.
+motif_7bp_center:	7 bp sequence motif centered on the mutation site.
+motif_9bp_center:	9 bp sequence motif centered on the mutation site.
+seq_complexity (99 bp, mut center):	Sequence composition or complexity metric calculated within a 99 bp window centered on the mutation.
+mononuc?:	Indicator of whether the mutation occurs within a mononucleotide repeat tract (1 = yes, 0 = no).
+lead/lag:	DNA replication strand designation indicating leading or lagging strand replication context. Missing values may indicate unavailable annotation.
+distance_to_ORI:	Distance from the mutation site to the nearest origin of replication (ORI), in base pairs.
+putative effect:	Predicted (Highest) functional impact of the mutation based on annotation software, SnpEff (e.g., MODIFIER, LOW, MODERATE, HIGH).
+Gene annotation:	Gene name associated with the mutation.
+gene_expressed_germline:	Indicator of whether the associated gene is expressed in the germline (1 = yes) .
+
+#End
+
+
+
 
