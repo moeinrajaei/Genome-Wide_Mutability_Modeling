@@ -1,0 +1,558 @@
+#!/bin/sh
+salloc -t 2:00:00 --mem=8G
+
+###GC_Content_nonmutated
+cd /blue/baer/mutability
+mkdir nonmutated
+cd nonmutated
+mkdir GC_content
+cd GC_content
+
+cp -r -p ../random_1000000_non_mutant_sites.txt .
+
+awk 'NR>1 {print $2"\t"$3}' random_1000000_non_mutant_sites.txt | sort -k1,1 -k2,2n > random_1000000_non_mutant_sites.bed
+
+module load bcftools
+module load bedtools
+
+GENOME_FA="/orange/baer/Raw_vcf_data/Index_files/c_elegans.PRJNA13758.WS292.genomic.fa"
+FAI="${GENOME_FA}.fai"   
+
+###10bp
+## Prepare the genomic_region_file:
+for i in *.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
+done
+
+for i in *.tab.bed; do
+cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
+done
+
+for i in *.tab.bed; do
+    file=`basename $i .bed`
+    paste "$i" "$file.txt" > "${i/%.tab.bed/.step1.bed}"
+done
+
+for i in *.step1.bed; do
+    awk '$2-=6' "$i" > "${i/%.step1.bed/.step2.bed}"
+done
+
+for i in *.step2.bed; do
+    awk '$3+=5' "$i" > "${i/%.step2.bed/.step3.bed}"
+done
+
+for i in *.step3.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3.bed/.final.bed}"
+done
+
+rm *.tab.txt
+rm *.tab.bed
+rm *.step1.bed
+rm *.step2.bed
+rm *.step3.bed
+
+## Calculate GC-content per region:
+for i in *.final.bed; do
+bedtools nuc -fi "$GENOME_FA" -bed "$i" > "${i/%.bed/.GC_10bp.txt}"
+done
+
+rm *.final.bed
+
+### 100bp:
+## Prepare the genomic_region_file:
+for i in *.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
+done
+
+for i in *.tab.bed; do
+cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
+done
+
+for i in *.tab.bed; do
+    file=`basename $i .bed`
+    paste "$i" "$file.txt" > "${i/%.tab.bed/.step1.bed}"
+done
+
+# step2: subtract 51 from col2, but set to 0 if result < 0
+for i in *.step1.bed; do
+    awk 'BEGIN{OFS="\t"} { tmp=$2-51; if (tmp<0) tmp=0; $2=tmp; print }' "$i" > "${i/%.step1.bed/.step2.bed}"
+done
+
+# step3: add 50 to col3; cap (and fix) to chromosome size from .fai
+for i in *.step2.bed; do
+    awk -v OFS='\t' '
+        NR==FNR { sz[$1]=$2; next }                  
+        {
+          max = sz[$1];
+          if (max == "" ) {                          
+            printf("WARNING: no size for %s\n", $1) > "/dev/stderr";
+            next;
+          }
+
+          # clamp start into [0, max-1]
+          if ($2 < 0) $2 = 0;
+          if ($2 >= max) $2 = (max>0 ? max-1 : 0);
+
+          # extend end by 50, then cap at max (BED end is 0-based, half-open)
+          end = $3 + 50;
+          if (end > max) end = max;
+          if (end < 0) end = 0;                     
+          $3 = end;
+
+          # ensure start < end; if not, make a 1bp interval at the end cap
+          if ($2 >= $3) $2 = ($3 > 0 ? $3 - 1 : 0);
+
+          print
+        }' "$FAI" "$i" > "${i/%.step2.bed/.step3.bed}"
+done
+
+for i in *.step3.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3.bed/.final.bed}"
+done
+
+rm *.tab.txt
+rm *.tab.bed
+rm *.step1.bed
+rm *.step2.bed
+rm *.step3.bed
+
+## Calculate GC-content per region:
+for i in *.final.bed; do
+bedtools nuc -fi "$GENOME_FA" -bed "$i" > "${i/%.bed/.GC_100bp.txt}"
+done
+
+rm *.final.bed
+
+### 1k_bp
+## Prepare the genomic_region_file:
+for i in *.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
+done
+
+for i in *.tab.bed; do
+cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
+done
+
+for i in *.tab.bed; do
+    file=`basename $i .bed`
+    paste "$i" "$file.txt" > "${i/%.tab.bed/.step1.bed}"
+done
+
+# step2: subtract 501 from col2, but set to 0 if result < 0
+for i in *.step1.bed; do
+    awk 'BEGIN{OFS="\t"} { tmp=$2-501; if (tmp<0) tmp=0; $2=tmp; print }' "$i" > "${i/%.step1.bed/.step2.bed}"
+done
+
+# step3: add 500 to col3; cap (and fix) to chromosome size from .fai
+for i in *.step2.bed; do
+    awk -v OFS='\t' '
+        NR==FNR { sz[$1]=$2; next }                  # read chrom sizes from .fai (field2)
+        {
+          max = sz[$1];
+          if (max == "" ) {                          # chrom not found in .fai
+            printf("WARNING: no size for %s\n", $1) > "/dev/stderr";
+            next;
+          }
+
+          # clamp start into [0, max-1]
+          if ($2 < 0) $2 = 0;
+          if ($2 >= max) $2 = (max>0 ? max-1 : 0);
+
+          # extend end by 500, then cap at max (BED end is 0-based, half-open)
+          end = $3 + 500;
+          if (end > max) end = max;
+          if (end < 0) end = 0;                      # paranoia guard
+          $3 = end;
+
+          # ensure start < end; if not, make a 1bp interval at the end cap
+          if ($2 >= $3) $2 = ($3 > 0 ? $3 - 1 : 0);
+
+          print
+        }' "$FAI" "$i" > "${i/%.step2.bed/.step3.bed}"
+done
+
+for i in *.step3.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3.bed/.final.bed}"
+done
+
+rm *.tab.txt
+rm *.tab.bed
+rm *.step1.bed
+rm *.step2.bed
+rm *.step3.bed
+
+## Calculate GC-content per region:
+for i in *.final.bed; do
+bedtools nuc -fi "$GENOME_FA" -bed "$i" > "${i/%.bed/.GC_1k_bp.txt}"
+done
+
+rm *.final.bed
+
+### 10k_bp
+## Prepare the genomic_region_file:
+for i in *.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
+done
+
+for i in *.tab.bed; do
+cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
+done
+
+for i in *.tab.bed; do
+    file=`basename $i .bed`
+    paste "$i" "$file.txt" > "${i/%.tab.bed/.step1.bed}"
+done
+
+# step2: subtract 5001 from col2, but set to 0 if result < 0
+for i in *.step1.bed; do
+    awk 'BEGIN{OFS="\t"} { tmp=$2-5001; if (tmp<0) tmp=0; $2=tmp; print }' "$i" > "${i/%.step1.bed/.step2.bed}"
+done
+
+# step3: add 5000 to col3; cap (and fix) to chromosome size from .fai
+for i in *.step2.bed; do
+    awk -v OFS='\t' '
+        NR==FNR { sz[$1]=$2; next }                  # read chrom sizes from .fai (field2)
+        {
+          max = sz[$1];
+          if (max == "" ) {                          # chrom not found in .fai
+            printf("WARNING: no size for %s\n", $1) > "/dev/stderr";
+            next;
+          }
+
+          # clamp start into [0, max-1]
+          if ($2 < 0) $2 = 0;
+          if ($2 >= max) $2 = (max>0 ? max-1 : 0);
+
+          # extend end by 5000, then cap at max (BED end is 0-based, half-open)
+          end = $3 + 5000;
+          if (end > max) end = max;
+          if (end < 0) end = 0;                      # paranoia guard
+          $3 = end;
+
+          # ensure start < end; if not, make a 1bp interval at the end cap
+          if ($2 >= $3) $2 = ($3 > 0 ? $3 - 1 : 0);
+
+          print
+        }' "$FAI" "$i" > "${i/%.step2.bed/.step3.bed}"
+done
+
+for i in *.step3.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3.bed/.final.bed}"
+done
+
+rm *.tab.txt
+rm *.tab.bed
+rm *.step1.bed
+rm *.step2.bed
+rm *.step3.bed
+
+## Calculate GC-content per region:
+for i in *.final.bed; do
+bedtools nuc -fi "$GENOME_FA" -bed "$i" > "${i/%.bed/.GC_10k_bp.txt}"
+done
+
+rm *.final.bed
+
+### 100k_bp
+## Prepare the genomic_region_file:
+for i in *.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
+done
+
+for i in *.tab.bed; do
+cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
+done
+
+for i in *.tab.bed; do
+    file=`basename $i .bed`
+    paste "$i" "$file.txt" > "${i/%.tab.bed/.step1.bed}"
+done
+
+# step2: subtract 50001 from col2, but set to 0 if result < 0
+for i in *.step1.bed; do
+    awk 'BEGIN{OFS="\t"} { tmp=$2-50001; if (tmp<0) tmp=0; $2=tmp; print }' "$i" > "${i/%.step1.bed/.step2.bed}"
+done
+
+# step3: add 50000 to col3; cap (and fix) to chromosome size from .fai
+for i in *.step2.bed; do
+    awk -v OFS='\t' '
+        NR==FNR { sz[$1]=$2; next }                  # read chrom sizes from .fai (field2)
+        {
+          max = sz[$1];
+          if (max == "" ) {                          # chrom not found in .fai
+            printf("WARNING: no size for %s\n", $1) > "/dev/stderr";
+            next;
+          }
+
+          # clamp start into [0, max-1]
+          if ($2 < 0) $2 = 0;
+          if ($2 >= max) $2 = (max>0 ? max-1 : 0);
+
+          # extend end by 50000, then cap at max (BED end is 0-based, half-open)
+          end = $3 + 50000;
+          if (end > max) end = max;
+          if (end < 0) end = 0;                      # paranoia guard
+          $3 = end;
+
+          # ensure start < end; if not, make a 1bp interval at the end cap
+          if ($2 >= $3) $2 = ($3 > 0 ? $3 - 1 : 0);
+
+          print
+        }' "$FAI" "$i" > "${i/%.step2.bed/.step3.bed}"
+done
+
+# keep tabs clean
+for i in *.step3.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3.bed/.final.bed}"
+done
+
+rm *.tab.txt
+rm *.tab.bed
+rm *.step1.bed
+rm *.step2.bed
+rm *.step3.bed
+
+## Calculate GC-content per region:
+for i in *.final.bed; do
+    bedtools nuc -fi "$GENOME_FA" -bed "$i" > "${i/%.bed/.GC_100k_bp.txt}"
+done
+
+rm *.final.bed
+
+# Merge all matching files:
+paste -d $'\t' $(printf "%s\n" *random_1000000_non_mutant_sites.final.GC* | sort -V) > random_1000000_non_mutant_sites.final.GC.tsv
+
+#End
+
+
+
+
+
+### motif
+cd /blue/baer/mutability/nonmutated/
+mkdir motif
+cd motif
+
+cp -r -p ../random_1000000_non_mutant_sites.txt .
+
+awk 'NR>1 {print $2"\t"$3}' random_1000000_non_mutant_sites.txt | sort -k1,1 -k2,2n > random_1000000_non_mutant_sites.bed
+
+
+### extract list of positions:
+for i in *.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
+done
+
+for i in *.tab.bed; do
+cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
+done
+
+for i in *.tab.bed; do
+    file=`basename $i .bed`
+    paste "$i" "$file.txt" > "${i/%.tab.bed/.step1.bed}"
+done
+
+##3bp_middle
+
+for i in *.step1.bed; do
+    awk '$2-=2' "$i" > "${i/%.step1.bed/.step2_3bp_middle.bed}"
+done
+
+for i in *.step2_3bp_middle.bed; do
+    awk '$3+=1' "$i" > "${i/%.step2_3bp_middle.bed/.step3_3bp_middle.bed}"
+done
+
+for i in *.step3_3bp_middle.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3_3bp_middle.bed/.final_3bp_middle.bed}"
+done
+
+#extract the sequence contex based on the bed file:
+for i in *.final_3bp_middle.bed; do
+    bedtools getfasta -bedOut -fi /orange/baer/Raw_vcf_data/Index_files/c_elegans.PRJNA13758.WS292.genomic.fa -bed "$i" > "${i/%.final_3bp_middle.bed/.3bp_middle.txt}"
+done
+
+
+##5bp_middle
+
+for i in *.step1.bed; do
+    awk '$2-=3' "$i" > "${i/%.step1.bed/.step2_5bp_middle.bed}"
+done
+
+for i in *.step2_5bp_middle.bed; do
+    awk '$3+=2' "$i" > "${i/%.step2_5bp_middle.bed/.step3_5bp_middle.bed}"
+done
+
+for i in *.step3_5bp_middle.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3_5bp_middle.bed/.final_5bp_middle.bed}"
+done
+
+#extract the sequence contex based on the bed file:
+for i in *.final_5bp_middle.bed; do
+    bedtools getfasta -bedOut -fi /orange/baer/Raw_vcf_data/Index_files/c_elegans.PRJNA13758.WS292.genomic.fa -bed "$i" > "${i/%.final_5bp_middle.bed/.5bp_middle.txt}"
+done
+
+
+##7bp_middle
+
+for i in *.step1.bed; do
+    awk '$2-=4' "$i" > "${i/%.step1.bed/.step2_7bp_middle.bed}"
+done
+
+for i in *.step2_7bp_middle.bed; do
+    awk '$3+=3' "$i" > "${i/%.step2_7bp_middle.bed/.step3_7bp_middle.bed}"
+done
+
+for i in *.step3_7bp_middle.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3_7bp_middle.bed/.final_7bp_middle.bed}"
+done
+
+#extract the sequence contex based on the bed file:
+for i in *.final_7bp_middle.bed; do
+    bedtools getfasta -bedOut -fi /orange/baer/Raw_vcf_data/Index_files/c_elegans.PRJNA13758.WS292.genomic.fa -bed "$i" > "${i/%.final_7bp_middle.bed/.7bp_middle.txt}"
+done
+
+
+##9bp_middle
+
+for i in *.step1.bed; do
+    awk '$2-=5' "$i" > "${i/%.step1.bed/.step2_9bp_middle.bed}"
+done
+
+for i in *.step2_9bp_middle.bed; do
+    awk '$3+=4' "$i" > "${i/%.step2_9bp_middle.bed/.step3_9bp_middle.bed}"
+done
+
+for i in *.step3_9bp_middle.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3_9bp_middle.bed/.final_9bp_middle.bed}"
+done
+
+#extract the sequence contex based on the bed file:
+for i in *.final_9bp_middle.bed; do
+    bedtools getfasta -bedOut -fi /orange/baer/Raw_vcf_data/Index_files/c_elegans.PRJNA13758.WS292.genomic.fa -bed "$i" > "${i/%.final_9bp_middle.bed/.9bp_middle.txt}"
+done
+
+
+##99bp_middle
+
+for i in *.step1.bed; do
+    awk 'BEGIN{OFS="\t"} { tmp=$2-50; if (tmp<0) tmp=0; $2=tmp; print }' "$i" > "${i/%.step1.bed/.step2_99bp_middle.bed}"
+done
+
+for i in *.step2_99bp_middle.bed; do
+    awk '$3+=49' "$i" > "${i/%.step2_99bp_middle.bed/.step3_99bp_middle.bed}"
+done
+
+for i in *.step3_99bp_middle.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3_99bp_middle.bed/.final_99bp_middle.bed}"
+done
+
+
+# create genome size file from fasta index
+module load samtools
+cut -f1,2 /orange/baer/Raw_vcf_data/Index_files/c_elegans.PRJNA13758.WS292.genomic.fa.fai > c_elegans.genome
+
+# clip BED intervals to chromosome boundaries
+for i in *.final_99bp_middle.bed; do
+    bedtools slop \
+        -i "$i" \
+        -g c_elegans.genome \
+        -b 0 > "${i/%.final_99bp_middle.bed/.clipped.bed}"
+
+    bedtools getfasta \
+        -bedOut \
+        -fi /orange/baer/Raw_vcf_data/Index_files/c_elegans.PRJNA13758.WS292.genomic.fa \
+        -bed "${i/%.final_99bp_middle.bed/.clipped.bed}" \
+        > "${i/%.final_99bp_middle.bed/.99bp_middle.txt}"
+done
+
+
+##3bp_first
+
+for i in *.step1.bed; do
+    awk '$2-=1' "$i" > "${i/%.step1.bed/.step2_3bp_first.bed}"
+done
+
+for i in *.step2_3bp_first.bed; do
+    awk '$3+=2' "$i" > "${i/%.step2_3bp_first.bed/.step3_3bp_first.bed}"
+done
+
+for i in *.step3_3bp_first.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3_3bp_first.bed/.final_3bp_first.bed}"
+done
+
+#extract the sequence contex based on the bed file:
+for i in *.final_3bp_first.bed; do
+    bedtools getfasta -bedOut -fi /orange/baer/Raw_vcf_data/Index_files/c_elegans.PRJNA13758.WS292.genomic.fa -bed "$i" > "${i/%.final_3bp_first.bed/.3bp_first.txt}"
+done
+
+
+##3bp_last
+
+for i in *.step1.bed; do
+    awk '$2-=3' "$i" > "${i/%.step1.bed/.step2_3bp_last.bed}"
+done
+
+for i in *.step2_3bp_last.bed; do
+    awk '$3+=0' "$i" > "${i/%.step2_3bp_last.bed/.step3_3bp_last.bed}"
+done
+
+for i in *.step3_3bp_last.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step3_3bp_last.bed/.final_3bp_last.bed}"
+done
+
+#extract the sequence contex based on the bed file:
+for i in *.final_3bp_last.bed; do
+    bedtools getfasta -bedOut -fi /orange/baer/Raw_vcf_data/Index_files/c_elegans.PRJNA13758.WS292.genomic.fa -bed "$i" > "${i/%.final_3bp_last.bed/.3bp_last.txt}"
+done
+ 
+	  
+##merging the files:
+for prefix in random_1000000_non_mutant_sites; do
+    files=(
+      ${prefix}.3bp_first.txt
+      ${prefix}.3bp_last.txt
+      ${prefix}.3bp_middle.txt
+      ${prefix}.5bp_middle.txt
+      ${prefix}.7bp_middle.txt
+      ${prefix}.9bp_middle.txt
+      ${prefix}.99bp_middle.txt
+    )
+
+    # skip if first file doesn't exist (prevents errors)
+    [[ -f "${files[0]}" ]] || continue
+
+    # build header
+    header=""
+    for f in "${files[@]}"; do
+      ncol=$(awk '{print NF; exit}' "$f")
+      base=$(basename "$f" .txt)
+      for ((i=1; i<=ncol; i++)); do
+        header+="${base}_col${i}\t"
+      done
+    done
+    header=${header%$'\t'}
+
+    # write merged file
+    {
+      echo -e "$header"
+      paste "${files[@]}"
+    } > ${prefix}.${type}.all_merged.with_header.txt
+
+  done
+
+
+rm *.bed
+rm *.3bp_last.txt
+rm *.3bp_middle.txt
+rm *.3bp_first.txt
+rm *.5bp_middle.txt
+rm *.7bp_middle.txt
+rm *.9bp_middle.txt
+rm *.99bp_middle.txt
+rm *.tab.txt	
+
+
+
+#End
+
+
