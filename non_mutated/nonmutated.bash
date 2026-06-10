@@ -745,3 +745,68 @@ FNR==1{
 
 #End
 
+###coding_context
+
+#!/bin/sh
+salloc -t 2:00:00 --mem=8G
+
+cd /blue/baer/mutability
+mkdir coding_context 
+cd coding_context
+
+module load java/23
+
+wget https://snpeff-public.s3.amazonaws.com/versions/snpEff_latest_core.zip
+unzip -o snpEff_latest_core.zip
+cd snpEff
+
+###annotations
+#Preparing data:
+cp -r -p ../mono/nonmutant_with_fake_mutations_mono.txt .
+
+
+### 1. Convert fake mutation table to VCF
+
+input="nonmutant_with_fake_mutations_mono.txt"
+vcf="nonmutant_fake_mutations.vcf"
+
+(
+echo "##fileformat=VCFv4.2"
+echo -e "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO"
+awk 'BEGIN{OFS="\t"} NR>1 {print $1,$2,".",$3,$4,".","PASS","."}' "$input"
+) > "$vcf"
+
+
+### 2. Run snpEff
+
+java -Xmx8g -jar snpEff/snpEff.jar -stats nonmutant_fake_mutations.snpEff.html \
+-v WBcel235.99 "$vcf" > nonmutant_fake_mutations.snpEff.vcf
+
+
+### 3. Extract annotation fields
+
+java -Xmx2g -jar snpEff/SnpSift.jar extractFields nonmutant_fake_mutations.snpEff.vcf \
+"CHROM" "POS" "REF" "ALT" \
+"ANN[0].ALLELE" "ANN[0].EFFECT" "ANN[0].IMPACT" \
+"ANN[0].GENE" "ANN[0].FEATUREID" \
+"ANN[0].HGVS_C" "ANN[0].HGVS_P" "ANN[0].GENEID" \
+> nonmutant_fake_mutations.highest_impact_snpEff.tsv
+
+#keep  mono column in the final snpEff table:
+
+awk 'BEGIN{OFS="\t"} NR==FNR{
+  if(NR>1) mono[$1":"$2]=$5
+  next
+}
+FNR==1{
+  print $0,"mono"
+  next
+}
+{
+  print $0,mono[$1":"$2]
+}' nonmutant_with_fake_mutations_mono.txt \
+nonmutant_fake_mutations.highest_impact_snpEff.tsv \
+> nonmutant_fake_mutations.highest_impact_snpEff.with_mono.tsv
+
+#End
+
