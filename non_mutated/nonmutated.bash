@@ -556,3 +556,78 @@ rm *.tab.txt
 #End
 
 
+###strand_asymmetry
+
+
+# + is forward
+# - is reverse
+
+module load bedops
+module load bcftools
+module load bedtools
+module load vcftools
+
+cd /blue/baer/mutability/nonmutated
+mkdir strand_asymmetry
+cd strand_asymmetry
+
+#Preparing the data:
+cp -r -p /blue/baer/mutability/strand_asymmetry/c_elegans.PRJNA13758.WS292.annotations.gff3 .
+cp -r -p ../random_1000000_non_mutant_sites.txt .
+
+awk 'NR>1 {print $2"\t"$3}' random_1000000_non_mutant_sites.txt | sort -k1,1 -k2,2n > random_1000000_non_mutant_sites.bed
+
+# extract list of positions:
+for i in *.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.bed/.tab.bed}"
+done
+
+for i in *.tab.bed; do
+cut -f2 "$i" > "${i/%.tab.bed/.tab.txt}" 
+done
+
+for i in *.tab.bed; do
+    file=`basename $i .bed`
+    paste "$i" "$file.txt" > "${i/%.tab.bed/.step1.bed}"
+done
+
+for i in *.step1.bed; do
+    awk '$2-=1' "$i" > "${i/%.step1.bed/.step2.bed}"
+done
+
+for i in *.step2.bed; do
+    awk -v OFS='\t' '{ $1=$1; print }' "$i" > "${i/%.step2.bed/.final.bed}"
+done
+
+### converting GFF3 to BED format
+gff2bed < c_elegans.PRJNA13758.WS292.annotations.gff3 > c_elegans.PRJNA13758.WS292.annotations.gff3.bed
+
+
+for i in *.final.bed; do
+bedtools intersect -a c_elegans.PRJNA13758.WS292.annotations.gff3.bed -b "$i" > "${i/%.final.bed/.gff3.bed}"
+done
+
+rm *.tab.txt
+rm *.tab.bed
+rm *.step1.bed
+rm *.step2.bed
+
+# filters lines where the seventh column is WormBase:
+for i in *sites.gff3.bed; do
+cat "$i"  | awk '$7=="WormBase" {print $0}' > "${i/%.gff3.bed/.wormbase.bed}"
+done
+
+for i in *.wormbase.bed; do
+  awk '$8=="gene" {print $1, $2, $3, $6, $7, $8}' "$i" > "${i/%.wormbase.bed/.wormbase.final.bed}"
+done
+
+#remove the duplicates:
+for i in *.wormbase.final.bed; do
+awk '!seen[$3]++' "$i"  > "${i/%.wormbase.final.bed/.wormbase.unique.bed}"
+done
+
+rm *.final.bed 
+rm *.wormbase.bed
+rm *.gff3.bed
+
+#End
