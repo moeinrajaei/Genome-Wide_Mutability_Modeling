@@ -700,4 +700,48 @@ NR==1{
 }' nonmutant_with_ref.sorted.header.txt > nonmutant_with_fake_mutations.txt
 
 #End 
+
+
  
+### extracting the variants from mononucleotides run:
+
+# Preparing the data:
+
+cd /blue/baer/mutability/nonmutated/
+mkdir mono
+cd mono
+
+cp -r -p ../random_1000000_non_mutant_sites.txt .
+
+awk 'NR>1 {print $2"\t"$3}' random_1000000_non_mutant_sites.txt | sort -k1,1 -k2,2n > random_1000000_non_mutant_sites.bed
+
+cp -r -p /blue/baer/share/moeinraja/reference_WS263/mono.5bp.final.bed .
+
+module load bedtools
+
+cp -r -p ../nonmutant_with_fake_mutations.txt .
+
+awk 'NR>1{print $1"\t"$2-1"\t"$2}' nonmutant_with_fake_mutations.txt > nonmutant.bed
+
+bedtools intersect -u -a nonmutant.bed -b mono.5bp.final.bed > mono_hits.bed
+
+awk '
+BEGIN{OFS="\t"}
+NR==FNR{
+    hit[$1":"$3]=1
+    next
+}
+FNR==1{
+    print $0, "mono"
+    next
+}
+{
+    key=$1":"$2
+    print $0, (key in hit ? 1 : 0)
+}
+' mono_hits.bed nonmutant_with_fake_mutations.txt \
+> nonmutant_with_fake_mutations_mono.txt
+
+
+#End
+
