@@ -631,3 +631,73 @@ rm *.wormbase.bed
 rm *.gff3.bed
 
 #End
+
+
+
+
+### Extract reference alleles
+
+# 1. Make BED file: CHROM start end
+awk 'NR>1 {print $2"\t"$3-1"\t"$3}' \
+random_1000000_non_mutant_sites.txt | \
+sort -k1,1 -k2,2n > positions.bed
+
+# 2. Extract reference base
+bedtools getfasta \
+-fi /orange/baer/Raw_vcf_data/Index_files/c_elegans.PRJNA13758.WS292.genomic.fa \
+-bed positions.bed \
+-tab > ref_alleles.txt
+
+# 3. Convert to: CHROM POS REF
+awk -F'[:\t-]' 'BEGIN{OFS="\t"} {print $1, $3, $4}' \
+ref_alleles.txt > nonmutant_with_ref.txt
+
+# 4. Sort by C. elegans chromosome order and position
+awk '
+BEGIN{
+  chr["I"]=1; chr["II"]=2; chr["III"]=3;
+  chr["IV"]=4; chr["V"]=5; chr["X"]=6; chr["MtDNA"]=7;
+}
+{
+  print chr[$1]"\t"$0
+}' nonmutant_with_ref.txt | \
+sort -k1,1n -k3,3n | \
+cut -f2- > nonmutant_with_ref.sorted.txt
+
+# 5. Add header
+(echo -e "CHROM\tPOS\tREF"; cat nonmutant_with_ref.sorted.txt) \
+> nonmutant_with_ref.sorted.header.txt
+
+rm nonmutant_with_ref.sorted.txt nonmutant_with_ref.txt ref_alleles.txt positions.bed
+
+
+# generate fake ALT allele:
+awk '
+BEGIN{
+    srand(123)
+    OFS="\t"
+}
+NR==1{
+    print $0, "ALT"
+    next
+}
+{
+    ref=$3
+
+    if(ref=="A"){
+        split("C G T", alt, " ")
+    } else if(ref=="C"){
+        split("A G T", alt, " ")
+    } else if(ref=="G"){
+        split("A C T", alt, " ")
+    } else if(ref=="T"){
+        split("A C G", alt, " ")
+    } else {
+        next
+    }
+
+    print $0, alt[int(rand()*3)+1]
+}' nonmutant_with_ref.sorted.header.txt > nonmutant_with_fake_mutations.txt
+
+#End 
+ 
