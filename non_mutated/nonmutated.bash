@@ -320,10 +320,30 @@ done
 rm *.final.bed
 
 # Merge all matching files:
-paste -d $'\t' $(printf "%s\n" *random_1000000_non_mutant_sites.final.GC* | sort -V) > random_1000000_non_mutant_sites.final.GC.tsv
+# Remove Windows carriage returns
+sed -i 's/\r$//' random_1000000_non_mutant_sites.bed
 
-#End
+awk 'BEGIN{OFS="\t"} {gsub(/\r/,"",$2); print $1,$2}' \
+random_1000000_non_mutant_sites.bed > original_positions.tmp
 
+awk 'NR>1 {print $5}' random_1000000_non_mutant_sites.final.GC_10bp.txt > GC_10bp.tmp
+awk 'NR>1 {print $5}' random_1000000_non_mutant_sites.final.GC_100bp.txt > GC_100bp.tmp
+awk 'NR>1 {print $5}' random_1000000_non_mutant_sites.final.GC_1k_bp.txt > GC_1kb.tmp
+awk 'NR>1 {print $5}' random_1000000_non_mutant_sites.final.GC_10k_bp.txt > GC_10kb.tmp
+awk 'NR>1 {print $5}' random_1000000_non_mutant_sites.final.GC_100k_bp.txt > GC_100kb.tmp
+
+paste original_positions.tmp \
+GC_10bp.tmp \
+GC_100bp.tmp \
+GC_1kb.tmp \
+GC_10kb.tmp \
+GC_100kb.tmp | \
+awk 'BEGIN{OFS="\t"; print "CHROM","POS","GC_10bp","GC_100bp","GC_1kb","GC_10kb","GC_100kb"} {print}' \
+> random_1000000_non_mutant_sites.final.GC.tsv
+
+rm original_positions.tmp GC_10bp.tmp GC_100bp.tmp GC_1kb.tmp GC_10kb.tmp GC_100kb.tmp
+
+#End 
 
 
 
