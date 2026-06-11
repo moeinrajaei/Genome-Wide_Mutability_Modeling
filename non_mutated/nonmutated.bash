@@ -525,40 +525,53 @@ for i in *.final_3bp_last.bed; do
     bedtools getfasta -bedOut -fi /orange/baer/Raw_vcf_data/Index_files/c_elegans.PRJNA13758.WS292.genomic.fa -bed "$i" > "${i/%.final_3bp_last.bed/.3bp_last.txt}"
 done
  
-	  
-##merging the files:
-for prefix in random_1000000_non_mutant_sites; do
-    files=(
-      ${prefix}.3bp_first.txt
-      ${prefix}.3bp_last.txt
-      ${prefix}.3bp_middle.txt
-      ${prefix}.5bp_middle.txt
-      ${prefix}.7bp_middle.txt
-      ${prefix}.9bp_middle.txt
-      ${prefix}.99bp_middle.txt
-    )
+## Merge sequence-context files using original CHROM/POS
 
-    # skip if first file doesn't exist (prevents errors)
-    [[ -f "${files[0]}" ]] || continue
+prefix="random_1000000_non_mutant_sites"
 
-    # build header
-    header=""
-    for f in "${files[@]}"; do
-      ncol=$(awk '{print NF; exit}' "$f")
-      base=$(basename "$f" .txt)
-      for ((i=1; i<=ncol; i++)); do
-        header+="${base}_col${i}\t"
-      done
-    done
-    header=${header%$'\t'}
+# Remove Windows carriage returns if present
+sed -i 's/\r$//' ${prefix}.bed
 
-    # write merged file
-    {
-      echo -e "$header"
-      paste "${files[@]}"
-    } > ${prefix}.${type}.all_merged.with_header.txt
+# Original CHROM and POS
+awk 'BEGIN{OFS="\t"} {gsub(/\r/,"",$2); print $1,$2}' \
+${prefix}.bed > original_positions.tmp
 
-  done
+# Extract sequence column from each bedtools getfasta -bedOut file
+# In bedOut output: col1=CHROM, col2=start, col3=end, col4=sequence
+
+awk 'BEGIN{OFS="\t"} {print $4}' ${prefix}.3bp_first.txt  > seq_3bp_first.tmp
+awk 'BEGIN{OFS="\t"} {print $4}' ${prefix}.3bp_last.txt   > seq_3bp_last.tmp
+awk 'BEGIN{OFS="\t"} {print $4}' ${prefix}.3bp_middle.txt > seq_3bp_middle.tmp
+awk 'BEGIN{OFS="\t"} {print $4}' ${prefix}.5bp_middle.txt > seq_5bp_middle.tmp
+awk 'BEGIN{OFS="\t"} {print $4}' ${prefix}.7bp_middle.txt > seq_7bp_middle.tmp
+awk 'BEGIN{OFS="\t"} {print $4}' ${prefix}.9bp_middle.txt > seq_9bp_middle.tmp
+awk 'BEGIN{OFS="\t"} {print $4}' ${prefix}.99bp_middle.txt > seq_99bp_middle.tmp
+
+# Merge original position + sequence context columns
+paste original_positions.tmp \
+seq_3bp_first.tmp \
+seq_3bp_last.tmp \
+seq_3bp_middle.tmp \
+seq_5bp_middle.tmp \
+seq_7bp_middle.tmp \
+seq_9bp_middle.tmp \
+seq_99bp_middle.tmp | \
+awk 'BEGIN{
+  OFS="\t";
+  print "CHROM","POS","seq_3bp_first","seq_3bp_last","seq_3bp_middle","seq_5bp_middle","seq_7bp_middle","seq_9bp_middle","seq_99bp_middle"
+}
+{print}' \
+> ${prefix}.all_merged.with_header.txt
+
+# Clean temporary files
+rm original_positions.tmp \
+seq_3bp_first.tmp \
+seq_3bp_last.tmp \
+seq_3bp_middle.tmp \
+seq_5bp_middle.tmp \
+seq_7bp_middle.tmp \
+seq_9bp_middle.tmp \
+seq_99bp_middle.tmp
 
 
 rm *.bed
@@ -569,9 +582,7 @@ rm *.5bp_middle.txt
 rm *.7bp_middle.txt
 rm *.9bp_middle.txt
 rm *.99bp_middle.txt
-rm *.tab.txt	
-
-
+rm *.tab.txt		
 
 #End
 
