@@ -364,3 +364,225 @@ summary_table <- rbindlist(lapply(seq_along(variant_files), function(i) {
 }))
 
 fwrite(summary_table, "recombination_rate_summary.tsv", sep = "\t")
+
+
+
+
+library(data.table)
+
+# -----------------------------
+# 1. Read files
+# -----------------------------
+
+base <- fread("random_1000000_non_mutant_sites.txt")
+wormbase <- fread("random_1000000_non_mutant_sites.wormbase.unique.bed")
+seqcontext <- fread("random_1000000_non_mutant_sites.all_merged.with_header.txt")
+gc <- fread("random_1000000_non_mutant_sites.final.GC.tsv")
+
+# -----------------------------
+# 2. Standardize CHROM / POS columns
+# -----------------------------
+
+base[, CHROM := as.character(CHROM)]
+base[, POS := as.integer(POS)]
+
+seqcontext[, CHROM := as.character(CHROM)]
+seqcontext[, POS := as.integer(POS)]
+
+gc[, CHROM := as.character(CHROM)]
+gc[, POS := as.integer(POS)]
+
+# WormBase BED may not have header
+# BED format: CHROM start0 end1 ...
+if (!all(c("CHROM", "POS") %in% names(wormbase))) {
+  setnames(
+    wormbase,
+    old = names(wormbase)[1:3],
+    new = c("CHROM", "start0", "end1")
+  )
+  wormbase[, POS := as.integer(end1)]
+}
+
+wormbase[, CHROM := as.character(CHROM)]
+wormbase[, POS := as.integer(POS)]
+
+# -----------------------------
+# 3. Remove duplicates
+# -----------------------------
+
+base <- unique(base, by = c("CHROM", "POS"))
+seqcontext <- unique(seqcontext, by = c("CHROM", "POS"))
+gc <- unique(gc, by = c("CHROM", "POS"))
+wormbase <- unique(wormbase, by = c("CHROM", "POS"))
+
+# -----------------------------
+# 4. Sort by biological chromosome order
+# -----------------------------
+
+chr_order <- c("I", "II", "III", "IV", "V", "X", "MtDNA")
+
+sort_by_chr_pos <- function(dt) {
+  dt[, chr_rank := match(CHROM, chr_order)]
+  setorder(dt, chr_rank, POS)
+  dt[, chr_rank := NULL]
+  return(dt)
+}
+
+base <- sort_by_chr_pos(base)
+seqcontext <- sort_by_chr_pos(seqcontext)
+gc <- sort_by_chr_pos(gc)
+wormbase <- sort_by_chr_pos(wormbase)
+
+# -----------------------------
+# 5. Check matching
+# -----------------------------
+
+cat("Base sites:", nrow(base), "\n")
+cat("Sequence-context sites:", nrow(seqcontext), "\n")
+cat("GC sites:", nrow(gc), "\n")
+cat("WormBase annotated sites:", nrow(wormbase), "\n\n")
+
+cat("Base sites missing from sequence-context file:",
+    nrow(base[!seqcontext, on = .(CHROM, POS)]), "\n")
+
+cat("Base sites missing from GC file:",
+    nrow(base[!gc, on = .(CHROM, POS)]), "\n")
+
+cat("Base sites without WormBase annotation:",
+    nrow(base[!wormbase, on = .(CHROM, POS)]), "\n\n")
+
+cat("Extra sequence-context sites not in base:",
+    nrow(seqcontext[!base, on = .(CHROM, POS)]), "\n")
+
+cat("Extra GC sites not in base:",
+    nrow(gc[!base, on = .(CHROM, POS)]), "\n")
+
+cat("Extra WormBase sites not in base:",
+    nrow(wormbase[!base, on = .(CHROM, POS)]), "\n\n")
+
+cat("Same row order for sequence-context file after sorting:",
+    nrow(base) == nrow(seqcontext) &&
+      all(base$CHROM == seqcontext$CHROM & base$POS == seqcontext$POS),
+    "\n")
+
+cat("Same row order for GC file after sorting:",
+    nrow(base) == nrow(gc) &&
+      all(base$CHROM == gc$CHROM & base$POS == gc$POS),
+    "\n\n")
+
+# -----------------------------
+# 6. Rename overlapping feature columns
+# -----------------------------
+
+rename_overlaps <- function(x, existing_names, suffix) {
+  overlap <- intersect(
+    setdiff(names(x), c("CHROM", "POS")),
+    existing_names
+  )
+  
+  if (length(overlap) > 0) {
+    setnames(x, overlap, paste0(overlap, suffix))
+  }
+  
+  return(x)
+}
+
+seqcontext <- rename_overlaps(
+  seqcontext,
+  setdiff(names(base), c("CHROM", "POS")),
+  "_seqcontext"
+)
+
+gc <- rename_overlaps(
+  gc,
+  union(
+    setdiff(names(base), c("CHROM", "POS")),
+    setdiff(names(seqcontext), c("CHROM", "POS"))
+  ),
+  "_GC"
+)
+
+wormbase <- rename_overlaps(
+  wormbase,
+  union(
+    union(
+      setdiff(names(base), c("CHROM", "POS")),
+      setdiff(names(seqcontext), c("CHROM", "POS"))
+    ),
+    setdiff(names(gc), c("CHROM", "POS"))
+  ),
+  "_wormbase"
+)
+
+# -----------------------------
+# 7. Merge all features by CHROM/POS
+# -----------------------------
+
+final <- merge(
+  base,
+  seqcontext,
+  by = c("CHROM", "POS"),
+  all.x = TRUE,
+  sort = FALSE
+)
+
+final <- merge(
+  final,
+  gc,
+  by = c("CHROM", "POS"),
+  all.x = TRUE,
+  sort = FALSE
+)
+
+final <- merge(
+  final,
+  wormbase,
+  by = c("CHROM", "POS"),
+  all.x = TRUE,
+  sort = FALSE
+)
+
+# -----------------------------
+# 8. Sort final file again
+# -----------------------------
+
+final <- sort_by_chr_pos(final)
+
+# -----------------------------
+# 9. Reorder columns
+# -----------------------------
+
+main_cols <- intersect(c("Strain", "CHROM", "POS"), names(final))
+
+setcolorder(
+  final,
+  c(main_cols, setdiff(names(final), main_cols))
+)
+
+# -----------------------------
+# 10. Final checks
+# -----------------------------
+
+cat("Final merged rows:", nrow(final), "\n")
+cat("Final merged columns:", ncol(final), "\n")
+
+cat("Final rows equal to base rows:",
+    nrow(final) == nrow(base), "\n")
+
+cat("Duplicated CHROM/POS in final:",
+    anyDuplicated(final[, .(CHROM, POS)]), "\n")
+
+# -----------------------------
+# 11. Save final merged file
+# -----------------------------
+
+fwrite(
+  final,
+  "random_1000000_non_mutant_sites.all_features_merged.tsv",
+  sep = "\t",
+  quote = FALSE,
+  na = "NA"
+)
+
+cat("Saved: random_1000000_non_mutant_sites.all_features_merged.tsv\n")
+
