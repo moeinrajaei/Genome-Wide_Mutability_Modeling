@@ -586,3 +586,342 @@ fwrite(
 
 cat("Saved: random_1000000_non_mutant_sites.all_features_merged.tsv\n")
 
+
+
+# Load required packages
+library(readxl)
+library(dplyr)
+library(writexl)
+
+setwd("C:/Moein/projects/Mutability/Hipergator/gene_expressed_germline")
+
+# File path
+file <- "germline_gene.xlsx"
+
+# Sheets to process
+sheets <- c("N2", "PB306", "mev", "C", "E", "G", "J", "M", "XZ7", "XZ8")
+
+# Read germline reference
+germline <- read_excel(file, sheet = "GermlineSageLib")
+
+# Clean germline gene names
+germline_names <- germline$`Gene Name` %>%
+  tolower() %>%
+  trimws()
+
+# Function to process each sheet
+process_sheet <- function(sheet_name) {
+  df <- read_excel(file, sheet = sheet_name)
+  
+  df %>%
+    mutate(
+      gene_clean = tolower(trimws(`Gene annotation`)),
+      match_flag = ifelse(gene_clean %in% germline_names, 1, NA)
+    ) %>%
+    select(-gene_clean)
+}
+
+# Apply function to all sheets
+results_list <- lapply(sheets, process_sheet)
+
+# Name the list (important for Excel sheet names)
+names(results_list) <- sheets
+
+# Write to Excel with multiple sheets
+write_xlsx(results_list, "gene_expressed_germline_results.xlsx")
+
+
+
+#End
+
+
+
+library(data.table)
+
+snpEff <- fread("nonmutant_fake_mutations.highest_impact_snpEff.with_mono.tsv")
+
+snpEff_keep <- snpEff[, .(
+  CHROM,
+  POS,
+  REF,
+  ALT,
+  `Coding context` = `ANN[0].EFFECT`,
+  `mononuc?` = mono,
+  `putative effect` = `ANN[0].IMPACT`,
+  `Gene annotation` = `ANN[0].GENE`
+)]
+
+fwrite(
+  snpEff_keep,
+  "nonmutant_fake_mutations.snpEff_selected_columns.tsv",
+  sep = "\t",
+  quote = FALSE,
+  na = "NA"
+)
+
+
+
+
+### # Load required packages
+library(readxl)
+library(dplyr)
+library(writexl)
+library(data.table)
+
+# -----------------------------
+# Files
+# -----------------------------
+
+germline_file <- "germline_gene.xlsx"
+
+input_file <- "nonmutant_fake_mutations.snpEff_selected_columns.tsv"
+
+# -----------------------------
+# Read germline reference
+# -----------------------------
+
+germline <- read_excel(germline_file, sheet = "GermlineSageLib")
+
+germline_names <- germline$`Gene Name` %>%
+  tolower() %>%
+  trimws()
+
+# -----------------------------
+# Read snpEff selected output
+# -----------------------------
+
+df <- fread(input_file)
+
+# -----------------------------
+# Add germline match flag
+# -----------------------------
+
+result <- df %>%
+  mutate(
+    gene_clean = tolower(trimws(`Gene annotation`)),
+    germline_match = ifelse(gene_clean %in% germline_names, 1, NA)
+  ) %>%
+  select(-gene_clean)
+
+
+
+# -----------------------------
+# Save outputs
+# -----------------------------
+
+fwrite(
+  result,
+  "nonmutant_gene_expressed_germline_results.tsv",
+  sep = "\t",
+  quote = FALSE,
+  na = "NA"
+)
+
+
+
+
+
+
+
+#End
+
+library(data.table)
+
+# -----------------------------
+# 1. Read files
+# -----------------------------
+
+features <- fread("random_1000000_non_mutant_sites.all_features_merged.tsv")
+snpEff_germline <- fread("nonmutant_gene_expressed_germline_results.tsv")
+recomb <- fread("nonmutated_OR_with_recomb_rate.tsv")
+
+# -----------------------------
+# 2. Standardize CHROM/POS
+# -----------------------------
+
+features[, CHROM := as.character(CHROM)]
+features[, POS := as.integer(POS)]
+
+snpEff_germline[, CHROM := as.character(CHROM)]
+snpEff_germline[, POS := as.integer(POS)]
+
+recomb[, CHROM := as.character(CHROM)]
+recomb[, POS := as.integer(POS)]
+
+# -----------------------------
+# 3. Remove duplicates
+# -----------------------------
+
+features <- unique(features, by = c("CHROM", "POS"))
+snpEff_germline <- unique(snpEff_germline, by = c("CHROM", "POS"))
+recomb <- unique(recomb, by = c("CHROM", "POS"))
+
+# -----------------------------
+# 4. Check coordinate matching
+# -----------------------------
+
+cat("Feature file sites:", nrow(features), "\n")
+cat("snpEff/germline sites:", nrow(snpEff_germline), "\n")
+cat("Recombination sites:", nrow(recomb), "\n\n")
+
+cat("Feature sites missing from snpEff/germline:",
+    nrow(features[!snpEff_germline, on = .(CHROM, POS)]), "\n")
+
+cat("Feature sites missing from recombination:",
+    nrow(features[!recomb, on = .(CHROM, POS)]), "\n\n")
+
+cat("Extra snpEff/germline sites not in features:",
+    nrow(snpEff_germline[!features, on = .(CHROM, POS)]), "\n")
+
+cat("Extra recombination sites not in features:",
+    nrow(recomb[!features, on = .(CHROM, POS)]), "\n\n")
+
+# -----------------------------
+# 5. Rename overlapping columns before merge
+# -----------------------------
+
+rename_overlaps <- function(x, existing_names, suffix) {
+  overlap <- intersect(
+    setdiff(names(x), c("CHROM", "POS")),
+    existing_names
+  )
+  
+  if (length(overlap) > 0) {
+    setnames(x, overlap, paste0(overlap, suffix))
+  }
+  
+  x
+}
+
+snpEff_germline <- rename_overlaps(
+  snpEff_germline,
+  setdiff(names(features), c("CHROM", "POS")),
+  "_snpEff"
+)
+
+recomb <- rename_overlaps(
+  recomb,
+  union(
+    setdiff(names(features), c("CHROM", "POS")),
+    setdiff(names(snpEff_germline), c("CHROM", "POS"))
+  ),
+  "_recomb"
+)
+
+# -----------------------------
+# 6. Merge all features
+# -----------------------------
+
+final <- merge(
+  features,
+  snpEff_germline,
+  by = c("CHROM", "POS"),
+  all.x = TRUE,
+  sort = FALSE
+)
+
+final <- merge(
+  final,
+  recomb,
+  by = c("CHROM", "POS"),
+  all.x = TRUE,
+  sort = FALSE
+)
+
+# -----------------------------
+# 7. Remove unwanted columns
+# -----------------------------
+
+cols_to_remove <- c(
+  "chrom",
+  "recmap_start",
+  "recmap_end",
+  "genetic_start",
+  "genetic_end",
+  "start",
+  "V5",
+  "V6",
+  "start0",
+  "end1"
+)
+
+final <- final[, !names(final) %in% cols_to_remove, with = FALSE]
+
+# -----------------------------
+# 8. Rename final columns
+# -----------------------------
+
+rename_map <- c(
+  "germline_match" = "gene_expressed_germline",
+  "recomb_rate_cM_Mb" = "recomb_rate",
+  "Max_Negative_Difference" = "distance_to_ORI",
+  "V4" = "lead/lag",
+  "seq_3bp_first" = "motif_3bp_mutfirst",
+  "seq_3bp_last" = "motif_3bp_mutlast",
+  "seq_3bp_middle" = "motif_3bp_mutcenter",
+  "seq_5bp_middle" = "motif_5bp_center",
+  "seq_7bp_middle" = "motif_7bp_center",
+  "seq_9bp_middle" = "motif_9bp_center",
+  "seq_99bp_middle" = "seq_complexity_99bp_mutcenter",
+  "GC_10bp" = "GC_11bp",
+  "GC_100bp" = "GC_101bp",
+  "GC_1kb" = "GC_1001bp",
+  "GC_10kb" = "GC_10001bp",
+  "GC_100kb" = "GC_100001bp"
+)
+
+existing <- intersect(names(rename_map), names(final))
+
+setnames(
+  final,
+  old = existing,
+  new = rename_map[existing]
+)
+
+# -----------------------------
+# 9. Sort final file
+# -----------------------------
+
+chr_order <- c("I", "II", "III", "IV", "V", "X", "MtDNA")
+
+final[, chr_rank := match(CHROM, chr_order)]
+setorder(final, chr_rank, POS)
+final[, chr_rank := NULL]
+
+# -----------------------------
+# 10. Reorder main columns
+# -----------------------------
+
+main_cols <- intersect(
+  c("Strain", "CHROM", "POS", "REF", "ALT"),
+  names(final)
+)
+
+setcolorder(
+  final,
+  c(main_cols, setdiff(names(final), main_cols))
+)
+
+# -----------------------------
+# 11. Final checks
+# -----------------------------
+
+cat("Final rows:", nrow(final), "\n")
+cat("Final columns:", ncol(final), "\n")
+cat("Duplicated CHROM/POS:",
+    anyDuplicated(final[, .(CHROM, POS)]), "\n")
+
+# -----------------------------
+# 12. Save final output
+# -----------------------------
+
+fwrite(
+  final,
+  "random_1000000_non_mutant_sites.final_all_features.cleaned.tsv",
+  sep = "\t",
+  quote = FALSE,
+  na = "NA"
+)
+
+cat("Saved: random_1000000_non_mutant_sites.final_all_features.cleaned.tsv\n")
+
