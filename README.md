@@ -4,7 +4,7 @@ This repository contains computational workflows used to investigate how genomic
 
 The project evaluates whether local sequence and genomic characteristics can predict the probability that a genomic position accumulates mutations. The analyses combine experimentally observed mutations, naturally occurring rare variants, and genomic annotations to build and validate statistical models of mutability.
 
-Project Overview
+## Project Overview
 
 Mutation rates are not uniform across the genome. Local sequence context, nucleotide composition, genomic position, and other features can influence the probability that a site acquires a mutation.
 
@@ -12,28 +12,28 @@ In this project, I developed statistical models to quantify these effects and ev
 
 The main analyses include:
 
-Construction and quality control of mutation datasets
-Generation of matched non-mutated genomic sites
-Genomic feature annotation
-Sequence-context analysis
-GC-content analysis across multiple genomic window sizes
-Statistical modeling of mutation probability
-Independent train/test validation across genetic backgrounds
-Model evaluation using ROC curves and AUC
-Visualization and interpretation of genomic predictors of mutability
+       - Construction and quality control of mutation datasets
+       - Generation of matched non-mutated genomic sites
+       - Genomic feature annotation
+       - Sequence-context analysis
+       - GC-content analysis across multiple genomic window sizes
+       - Statistical modeling of mutation probability
+       - Independent train/test validation across genetic backgrounds
+       - Model evaluation using ROC curves and AUC
+       - Visualization and interpretation of genomic predictors of mutability
 
 The primary analyses were performed in R and Bash/Linux using reproducible computational workflows.
 
-Biological Questions
+## Biological Questions
 
 This project addresses several related questions:
 
-Which genomic characteristics are associated with increased mutation probability?
-How strongly does local sequence context affect genome-wide mutability?
-Does GC content influence mutation susceptibility, and at what genomic scale?
-Are mutability models learned in one genetic background predictive in another?
-Can experimentally accumulated mutations and naturally occurring rare variants reveal common genomic determinants of mutation?
-Data
+       1- Which genomic characteristics are associated with increased mutation probability?
+       2- How strongly does local sequence context affect genome-wide mutability?
+       3- Does GC content influence mutation susceptibility, and at what genomic scale?
+       4- Are mutability models learned in one genetic background predictive in another?
+       5- Can experimentally accumulated mutations and naturally occurring rare variants reveal common genomic determinants of mutation?
+## Data
 
 The analyses use genomic variation data from Caenorhabditis elegans, including:
 
@@ -94,7 +94,7 @@ Genomic Features
 
 Features evaluated in the modeling framework include:
 
-Sequence Context
+### Sequence Context
 
 Local nucleotide context was incorporated to capture sequence-dependent differences in mutation probability.
 
@@ -103,7 +103,8 @@ Examples include:
 Central nucleotide identity
 3-bp sequence context
 Flanking nucleotide composition
-GC Content
+
+### GC Content
 
 GC content was calculated across multiple genomic scales, including approximately:
 
@@ -115,10 +116,7 @@ GC content was calculated across multiple genomic scales, including approximatel
 
 This allows comparison of local versus broader genomic effects on mutation probability.
 
-Additional Features
-
-Depending on the analysis, additional predictors include:
-
+Additional Features:
 Strand information
 Mononucleotide sequence features
 Genomic position
