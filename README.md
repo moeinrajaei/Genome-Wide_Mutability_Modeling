@@ -1,181 +1,252 @@
 # Genome-Wide Mutability Modeling
 
-This repository contains computational workflows used to investigate how genomic features influence mutation susceptibility across the genome.
+This repository contains computational workflows for investigating how genomic and sequence features influence mutation susceptibility across the *Caenorhabditis elegans* genome.
 
-The project evaluates whether local sequence and genomic characteristics can predict the probability that a genomic position accumulates mutations. The analyses combine experimentally observed mutations, naturally occurring rare variants, and genomic annotations to build and validate statistical models of mutability.
+The project combines experimentally observed mutations, naturally occurring rare variants, and genomic annotations to identify features associated with mutation probability and to develop statistical models of genome-wide mutability.
 
 ## Project Overview
 
-Mutation rates are not uniform across the genome. Local sequence context, nucleotide composition, genomic position, and other features can influence the probability that a site acquires a mutation.
+Mutation rates are not uniform across the genome. Local sequence context, nucleotide composition, repetitive sequences, recombination, replication, gene function, and other genomic properties may influence the probability that a genomic position acquires a mutation.
 
-In this project, I developed statistical models to quantify these effects and evaluate how well genomic features predict mutation susceptibility.
+In this project, I developed computational and statistical workflows to quantify these relationships and evaluate how well genomic features predict mutation susceptibility.
 
-The main analyses include:
+The analyses include:
 
-       - Construction and quality control of mutation datasets
-       - Generation of matched non-mutated genomic sites
-       - Genomic feature annotation
-       - Sequence-context analysis
-       - GC-content analysis across multiple genomic window sizes
-       - Statistical modeling of mutation probability
-       - Independent train/test validation across genetic backgrounds
-       - Model evaluation using ROC curves and AUC
-       - Visualization and interpretation of genomic predictors of mutability
+* Processing and quality control of mutation datasets
+* Generation of non-mutated genomic sites for comparison
+* Annotation of genomic and sequence features
+* Sequence-context analysis at multiple motif lengths
+* GC-content analysis across multiple genomic scales
+* Analysis of mononucleotide repeats and local sequence complexity
+* Integration of recombination and DNA replication features
+* Functional and gene-level annotation
+* Statistical modeling of mutation probability
+* Cross-strain model validation
+* Model evaluation using ROC curves and AUC
+* Visualization and interpretation of genomic predictors of mutability
 
-The primary analyses were performed in R and Bash/Linux using reproducible computational workflows.
+The primary analyses were performed using **R, Bash, and Linux/HPC computational environments**.
 
 ## Biological Questions
 
 This project addresses several related questions:
 
-       1- Which genomic characteristics are associated with increased mutation probability?
-       2- How strongly does local sequence context affect genome-wide mutability?
-       3- Does GC content influence mutation susceptibility, and at what genomic scale?
-       4- Are mutability models learned in one genetic background predictive in another?
-       5- Can experimentally accumulated mutations and naturally occurring rare variants reveal common genomic determinants of mutation?
+1. Which genomic and sequence characteristics are associated with increased mutation probability?
+2. At what genomic scale is local GC content associated with mutation susceptibility?
+3. How strongly does local nucleotide context influence mutability?
+4. Are repetitive sequences and local sequence complexity associated with increased mutation probability?
+5. Do recombination rate, replication strand, or distance to origins of replication influence mutation susceptibility?
+6. Does genomic functional context or germline gene expression contribute to variation in mutability?
+7. Are models developed using one *C. elegans* genetic background predictive in another genetic background?
+8. Which combination of genomic features provides the strongest model of genome-wide mutation susceptibility?
+
 ## Data
 
-The analyses use genomic variation data from Caenorhabditis elegans, including:
+The analyses use genomic variation data from *C. elegans*, including:
 
-Experimentally accumulated single-nucleotide variants
-Rare naturally occurring variants
-Randomly sampled non-mutated genomic positions used as controls
-Reference genome sequence and genomic annotations
+* Experimentally accumulated mutations
+* Naturally occurring rare variants
+* Randomly sampled non-mutated genomic positions used as controls
+* Reference genome sequence
+* Gene and functional annotations
+* Recombination and DNA replication annotations
+* Germline gene-expression annotations
 
-The main mutation datasets include approximately:
+The mutation datasets include approximately:
 
-7,000 experimentally accumulated SNVs
-11,000+ rare variants
+* **7,000 experimentally accumulated SNVs**
+* **11,000+ naturally occurring rare variants**
 
-Analyses include the N2 and PB306 genetic backgrounds, allowing models trained on one background to be evaluated in an independent genomic background.
+Analyses include the **N2** and **PB306** genetic backgrounds, allowing statistical models developed using one genetic background to be evaluated using an independent background.
 
-Raw or intermediate datasets that are too large for GitHub are not stored directly in the repository. Scripts used to generate or process these files are provided where possible.
+Large raw and intermediate datasets are not necessarily included directly in the repository. Scripts used to generate, annotate, and process these datasets are provided where possible.
 
-Analytical Workflow
+## Genomic Features
 
-The overall workflow is:
+The modeling framework incorporates features representing local sequence composition, broader genomic context, DNA replication and recombination, functional annotation, and gene expression.
 
-Mutation datasets
-       │
-       ▼
-Data cleaning and filtering
-       │
-       ▼
-Generation of matched non-mutated sites
-       │
-       ▼
-Genomic feature annotation
-       │
-       ├── Sequence context
-       ├── GC content
-       ├── Strand
-       └── Additional genomic features
-       │
-       ▼
-Feature harmonization
-       │
-       ▼
-Statistical modeling
-       │
-       ├── Logistic regression
-       ├── Train/test analyses
-       └── Cross-background validation
-       │
-       ▼
-Model evaluation
-       │
-       ├── ROC curves
-       ├── AUC
-       └── Odds ratios
-       │
-       ▼
-Biological interpretation and visualization
-Genomic Features
+### Mutation and Genomic Coordinates
 
-Features evaluated in the modeling framework include:
-
-### Sequence Context
-
-Local nucleotide context was incorporated to capture sequence-dependent differences in mutation probability.
-
-Examples include:
-
-Central nucleotide identity
-3-bp sequence context
-Flanking nucleotide composition
+| Feature    | Description                                                                        |
+| ---------- | ---------------------------------------------------------------------------------- |
+| `Strain`   | *C. elegans* strain in which the mutation was observed.                            |
+| `Mut_type` | Mutation class: single nucleotide variant (`SNV`) or insertion/deletion (`indel`). |
+| `CHROM`    | Chromosome containing the mutation.                                                |
+| `POS`      | Genomic position of the mutation using a 1-based coordinate system.                |
+| `REF`      | Reference allele at the mutation position.                                         |
+| `ALT`      | Alternate (mutant) allele observed at the position.                                |
 
 ### GC Content
 
-GC content was calculated across multiple genomic scales, including approximately:
+GC content was calculated using five window sizes centered on each genomic position, allowing the relationship between mutation susceptibility and nucleotide composition to be evaluated across local and broader genomic scales.
 
-10 bp
-100 bp
-1 kb
-10 kb
-100 kb
+| Feature       | Description                                                          |
+| ------------- | -------------------------------------------------------------------- |
+| `GC_11bp`     | GC content within an 11 bp window centered on the mutation site.     |
+| `GC_101bp`    | GC content within a 101 bp window centered on the mutation site.     |
+| `GC_1001bp`   | GC content within a 1,001 bp window centered on the mutation site.   |
+| `GC_10001bp`  | GC content within a 10,001 bp window centered on the mutation site.  |
+| `GC_100001bp` | GC content within a 100,001 bp window centered on the mutation site. |
 
-This allows comparison of local versus broader genomic effects on mutation probability.
+Using multiple window sizes allows the models to distinguish highly localized sequence effects from broader regional genomic effects.
 
-Additional Features:
-Strand information
-Mononucleotide sequence features
-Genomic position
-Reference nucleotide
-Genomic annotations
-Statistical Modeling
+### Local Sequence Context
 
-Mutation probability was modeled primarily using logistic regression.
+Multiple representations of the nucleotide sequence surrounding each genomic position were evaluated.
+
+| Feature               | Description                                                                  |
+| --------------------- | ---------------------------------------------------------------------------- |
+| `motif_3bp_mutfirst`  | 3 bp sequence motif with the mutation site at the first nucleotide position. |
+| `motif_3bp_mutlast`   | 3 bp sequence motif with the mutation site at the last nucleotide position.  |
+| `motif_3bp_mutcenter` | 3 bp sequence motif centered on the mutation site.                           |
+| `motif_5bp_center`    | 5 bp sequence motif centered on the mutation site.                           |
+| `motif_7bp_center`    | 7 bp sequence motif centered on the mutation site.                           |
+| `motif_9bp_center`    | 9 bp sequence motif centered on the mutation site.                           |
+
+These features allow the models to capture context-dependent differences in mutation probability at multiple sequence scales.
+
+### Repetitive Sequence and Sequence Complexity
+
+| Feature          | Description                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `seq_complexity` | Sequence composition/complexity metric calculated within a 99 bp window centered on the mutation site.       |
+| `mononuc`        | Indicator of whether the genomic position occurs within a mononucleotide repeat tract (`1 = yes`, `0 = no`). |
+
+These features were included to investigate whether repetitive or low-complexity genomic regions have distinct mutation susceptibilities.
+
+### Recombination and DNA Replication
+
+| Feature           | Description                                                                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `recomb_rate`     | Local recombination rate at the mutation site, measured in centimorgans per megabase (cM/Mb).                                                                             |
+| `lead_lag`        | DNA replication strand designation indicating leading- or lagging-strand replication context. Missing values indicate positions for which the annotation was unavailable. |
+| `distance_to_ORI` | Distance from the genomic position to the nearest origin of replication (ORI), measured in base pairs.                                                                    |
+
+These variables allow the analysis to test whether genomic processes associated with recombination and DNA replication contribute to mutation-rate variation.
+
+### Functional Genomic Context
+
+| Feature                   | Description                                                                                                                |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `Coding_context`          | Functional genomic region containing the mutation, such as exon, intron, UTR, intergenic, upstream, or downstream regions. |
+| `putative_effect`         | Highest predicted functional impact based on SnpEff annotation, including `MODIFIER`, `LOW`, `MODERATE`, and `HIGH`.       |
+| `Gene_annotation`         | Gene associated with the genomic position.                                                                                 |
+| `gene_expressed_germline` | Indicator of whether the associated gene is expressed in the germline (`1 = yes`).                                         |
+
+These features allow relationships between mutation susceptibility and functional genomic context to be evaluated.
+
+## Analytical Workflow
+
+The overall analytical framework is:
+
+```text
+Mutation and rare-variant datasets
+                │
+                ▼
+        Data cleaning and QC
+                │
+                ▼
+Generation of non-mutated control sites
+                │
+                ▼
+       Genomic feature annotation
+                │
+       ┌────────┼─────────┐
+       ▼        ▼         ▼
+   Sequence     GC     Functional
+    context   content   annotation
+       │        │         │
+       ├────────┼─────────┤
+       │        │         │
+       ▼        ▼         ▼
+ Recombination  Replication  Gene expression
+                │
+                ▼
+        Feature harmonization
+                │
+                ▼
+        Statistical modeling
+                │
+        ┌───────┴────────┐
+        ▼                ▼
+ Logistic regression   Cross-strain
+                        validation
+        │                │
+        └───────┬────────┘
+                ▼
+          Model evaluation
+                │
+         ┌──────┼──────┐
+         ▼      ▼      ▼
+        ROC    AUC   Odds ratios
+                │
+                ▼
+ Biological interpretation
+      and visualization
+```
+
+## Statistical Modeling
+
+Mutation susceptibility was modeled primarily using **logistic regression**.
 
 Genomic positions were classified as:
 
+```text
 1 = mutated site
 0 = non-mutated control site
+```
 
-Models were trained using combinations of genomic features to estimate their association with mutation probability.
+Models incorporated combinations of sequence and genomic features to estimate their associations with mutation probability.
 
-Model coefficients were interpreted using odds ratios where appropriate.
+Predictor effects were evaluated using regression coefficients and odds ratios, while predictive performance was assessed using receiver operating characteristic (ROC) curves and area under the ROC curve (AUC).
 
-Cross-Background Validation
+## Cross-Strain Validation
 
-To evaluate whether genomic determinants of mutability generalize across genetic backgrounds, models were trained and tested independently between strains.
+A major objective of the project was to determine whether genomic determinants of mutation susceptibility generalize across genetic backgrounds.
 
-Example framework:
+Models were therefore evaluated using reciprocal train/test designs:
 
+```text
 Train: PB306
-Test: N2
+Test:  N2
+```
 
-and
+and:
 
+```text
 Train: N2
-Test: PB306
+Test:  PB306
+```
 
-A combined model was also evaluated using data from both genetic backgrounds.
+Models combining information from both genetic backgrounds were also evaluated.
 
-This design provides a stronger test of generalizability than evaluating model performance only on the dataset used for training.
+This approach provides an independent assessment of model generalizability rather than relying exclusively on performance within the data used for model development.
 
-Model Evaluation
+## Model Evaluation
 
-Predictive performance was evaluated using:
+Model performance and predictor effects were evaluated using:
 
-Receiver operating characteristic curves
-Area under the ROC curve (AUC)
-Regression coefficients
-Odds ratios
-Cross-dataset validation
+* Receiver operating characteristic (ROC) curves
+* Area under the ROC curve (AUC)
+* Regression coefficients
+* Odds ratios
+* Cross-strain validation
+* Comparison of models incorporating different genomic features
 
-These analyses were used to determine which genomic features contribute most strongly to variation in mutation susceptibility.
+These analyses were used to identify genomic characteristics associated with mutation susceptibility and determine which combinations of features provide the strongest predictive performance.
 
-Repository Structure
+## Repository Structure
 
-The repository is organized by major stages of the analysis.
+The repository contains separate directories corresponding to major stages and components of the analysis.
 
+```text
 Genome-Wide-Mutability-Modeling/
 │
 ├── rawdata/
 │   └── Input and intermediate genomic datasets
 │
 ├── data_processing/
-│   └── Cleaning, filtering, and harmonization scripts
+│   └── Data cleaning, filtering, and harmonization
 │
 ├── control_sites/
 │   └── Generation and processing of non-mutated genomic sites
@@ -184,84 +255,90 @@ Genome-Wide-Mutability-Modeling/
 │   └── Annotation of genomic and sequence features
 │
 ├── sequence_context/
-│   └── Sequence-context analyses
+│   └── Sequence motif and local-context analyses
 │
 ├── gc_content/
-│   └── GC-content calculations and analyses
+│   └── GC-content calculations across multiple window sizes
 │
 ├── statistical_models/
-│   └── Logistic regression and related modeling workflows
+│   └── Logistic regression and related statistical analyses
 │
 ├── validation/
-│   └── Train/test and cross-background validation
+│   └── Train/test and cross-strain model validation
 │
 ├── figures/
-│   └── Scripts and outputs used for visualization
+│   └── Visualization scripts and generated figures
 │
 └── README.md
+```
 
-The exact folder names may differ from this overview as the repository is being reorganized for clarity and reproducibility.
+The exact directory structure may differ from this overview as the repository is being organized to improve clarity and reproducibility.
 
-Reproducibility
+## Reproducibility
 
 Analyses were primarily performed using:
 
-R
-Bash
-Linux
-High-performance computing environments
+* **R**
+* **Bash**
+* **Linux**
+* **High-performance computing (HPC)**
 
-Common R analyses include statistical modeling, model evaluation, data visualization, and downstream interpretation.
+R was used for statistical modeling, model evaluation, data visualization, and downstream interpretation.
 
-Command-line workflows were used for genomic file processing, sequence extraction, annotation, and large-scale data manipulation.
+Command-line workflows were used for genomic data processing, sequence extraction, annotation, and manipulation of large genomic datasets.
 
-Running the Analysis
+## Running the Analysis
 
-The repository is organized so that analyses can be reproduced approximately in the following order:
+The overall analysis can be reproduced approximately in the following order:
 
-1. Prepare mutation datasets
+```text
+1. Prepare and quality-control mutation datasets
 2. Generate non-mutated control positions
-3. Annotate genomic features
-4. Combine mutation and control datasets
-5. Fit statistical models
-6. Perform cross-background validation
-7. Evaluate predictive performance
-8. Generate figures and summary results
+3. Annotate genomic and sequence features
+4. Calculate sequence-context and GC-content features
+5. Add recombination, replication, and functional annotations
+6. Harmonize mutation and control datasets
+7. Fit statistical models
+8. Perform cross-strain validation
+9. Evaluate predictive performance
+10. Generate figures and summary results
+```
 
-Individual analysis folders contain scripts for each stage.
+Individual analysis directories contain scripts corresponding to each stage of the workflow.
 
-Because some source datasets and intermediate files are large, users may need to generate these files locally before running downstream analyses.
+Some source and intermediate datasets are too large to distribute directly through GitHub and must be generated locally before running downstream analyses.
 
-Key Outputs
+## Key Outputs
 
-The project generates:
+The workflow generates:
 
-Annotated mutation and control datasets
-Genomic feature matrices
-Fitted mutability models
-Estimated genomic predictor effects
-Odds ratios and model coefficients
-ROC curves
-AUC estimates
-Cross-background validation results
-Publication-quality figures
-Related Publication
+* Harmonized mutation and non-mutated control datasets
+* Genomic feature matrices
+* Statistical models of mutation susceptibility
+* Estimated effects of individual genomic predictors
+* Regression coefficients and odds ratios
+* ROC curves and AUC estimates
+* Cross-strain validation results
+* Summary visualizations and publication-quality figures
 
-This work builds on research into genomic determinants of mutation-rate variation in C. elegans.
+## Related Publication
 
-Rajaei M., et al.
-Mutability of mononucleotide repeats, not oxidative stress, explains the discrepancy between laboratory-accumulated mutations and the natural allele-frequency spectrum in C. elegans.
-Genome Research
+This project builds on my research into genomic determinants of mutation-rate variation in *C. elegans*:
 
-Author
+**Rajaei M., et al.**
+*Mutability of mononucleotide repeats, not oxidative stress, explains the discrepancy between laboratory-accumulated mutations and the natural allele-frequency spectrum in C. elegans.*
+**Genome Research**
 
-Moein Rajaei, Ph.D.
+## Author
+
+**Moein Rajaei, Ph.D.**
 Computational Biologist | Cancer Genomics & Bioinformatics
 
-GitHub: [add profile link]
-ORCID: [add ORCID link]
-Google Scholar: [add Google Scholar link]
-LinkedIn: [add LinkedIn link]
-License
+* GitHub: [add GitHub profile URL]
+* ORCID: [add ORCID URL]
+* Google Scholar: [add Google Scholar URL]
+* LinkedIn: [add LinkedIn URL]
 
-Add an appropriate open-source license before public release. For scientific code, common choices include MIT, BSD-3-Clause, or GPL-3.0.
+## License
+
+An open-source license should be added before public release. Common options for scientific software include the MIT, BSD-3-Clause, and GPL-3.0 licenses.
