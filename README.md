@@ -325,14 +325,13 @@ The workflow generates:
 
 This repository supports research investigating mutation rates, mutational spectra, genomic determinants of mutability, and the evolutionary consequences of spontaneous mutations in *Caenorhabditis elegans*. Related publications include:
 
-1. **Rajaei M**, Saxena AS, Johnson LM, Snyder MC, Crombie TA, Tanny RE, Andersen EC, Joyner-Matos J, Baer CF. **Mutability of mononucleotide repeats, not oxidative stress, explains the discrepancy between laboratory-accumulated mutations and the natural allele-frequency spectrum in *C. elegans*.** *Genome Research*. 2021;31(9):1602–1613.
+1. **Rajaei M**, Saxena AS, Johnson LM, Snyder MC, Crombie TA, Tanny RE, Andersen EC, Joyner-Matos J, Baer CF. Mutability of mononucleotide repeats, not oxidative stress, explains the discrepancy between laboratory-accumulated mutations and the natural allele-frequency spectrum in *C. elegans*. **.*Genome Research*.** 2021;31(9):1602–1613.
 
-2. Saber S, Rifat MM, Rahimi F, Snyder M, Singh A, Eickwort B, Newhall Y, **Rajaei M**, Saxena AS, Tanny R, Katju V, Andersen EC, Zhou J, Baer CF. **Evolution of the rate, molecular spectrum, and fitness effects of mutation under minimal selection in *Caenorhabditis elegans*.** *Genetics*. 2026;233(1):iyag085.
-   DOI: https://doi.org/10.1093/genetics/iyag085
+2. Saber S, Rifat MM, Rahimi F, Snyder M, Singh A, Eickwort B, Newhall Y, **Rajaei M**, Saxena AS, Tanny R, Katju V, Andersen EC, Zhou J, Baer CF. Evolution of the rate, molecular spectrum, and fitness effects of mutation under minimal selection in *Caenorhabditis elegans*. **.*Genetics*.** 2026;233(1).
 
-3. Crombie TA, **Rajaei M**, Saxena AS, Johnson LM, Saber S, Tanny RE, Ponciano JM, Andersen EC, Zhou J, Baer CF. **Direct inference of the distribution of fitness effects of spontaneous mutations from recombinant inbred *Caenorhabditis elegans* mutation accumulation lines.** *Genetics*. 2024;228(2):iyae136.
+3. Crombie TA, **Rajaei M**, Saxena AS, Johnson LM, Saber S, Tanny RE, Ponciano JM, Andersen EC, Zhou J, Baer CF. Direct inference of the distribution of fitness effects of spontaneous mutations from recombinant inbred *Caenorhabditis elegans* mutation accumulation lines. **.*Genetics*.** 2024;228(2).
 
-4. Saber S, Snyder M, **Rajaei M**, Baer CF. **Mutation, selection, and the prevalence of the *Caenorhabditis elegans* heat-sensitive mortal germline phenotype.** *G3: Genes|Genomes|Genetics*. 2022;12(5):jkac063.
+4. Saber S, Snyder M, **Rajaei M**, Baer CF. Mutation, selection, and the prevalence of the *Caenorhabditis elegans* heat-sensitive mortal germline phenotype. **.*G3: Genes|Genomes|Genetics*.** 2022;12(5):jkac063.
 
 
 ## Author
