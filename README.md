@@ -335,7 +335,7 @@ This repository supports research investigating mutation rates, mutational spect
 ## Author
 
 **Moein Rajaei, Ph.D.**
-Computational Biologist | Cancer Genomics & Bioinformatics
+Computational Biologist | Genomics & Bioinformatics Scientist
 
 * GitHub: https://github.com/moeinrajaei
 * ORCID: https://orcid.org/my-orcid?orcid=0009-0006-7079-2033
