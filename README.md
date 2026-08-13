@@ -54,10 +54,8 @@ The analyses use genomic variation data from *C. elegans*, including:
 
 The mutation datasets include approximately:
 
-* **7,000 experimentally accumulated SNVs**
-* **11,000+ naturally occurring rare variants**
-
-Analyses include the **N2** and **PB306** genetic backgrounds, allowing statistical models developed using one genetic background to be evaluated using an independent background.
+* **47,000 experimentally accumulated SNVs/INDELs**
+* **1,000,000+ non-mutant sites**
 
 Large raw and intermediate datasets are not necessarily included directly in the repository. Scripts used to generate, annotate, and process these datasets are provided where possible.
 
