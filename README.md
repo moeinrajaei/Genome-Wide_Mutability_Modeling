@@ -340,5 +340,5 @@ Computational Biologist | Genomics & Bioinformatics Scientist
 * GitHub: https://github.com/moeinrajaei
 * ORCID: https://orcid.org/my-orcid?orcid=0009-0006-7079-2033
 * Google Scholar: https://scholar.google.com/citations?user=LbgtrokAAAAJ&hl=en&oi=ao
-* LinkedIn: https://www.linkedin.com/in/moein-rajaei-ph-d-3a5a136b/
+* LinkedIn: https://www.linkedin.com/in/moein-rajaei-ph-d-3a5a136b/ 
 
