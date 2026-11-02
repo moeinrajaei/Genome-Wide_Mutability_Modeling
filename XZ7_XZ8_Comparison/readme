@@ -1,1 +1,153 @@
+# Comparison of Genomic Features Between Sequencing Replicates
 
+## Overview
+
+This repository contains R scripts for comparing mutation profiles and genomic features between two sequencing replicates (XZ7 and XZ8) of the same mutation-accumulation (MA) line.
+
+The analysis evaluates mutation detection concordance, identifies shared and replicate-specific mutations, and compares their genomic characteristics to investigate potential sequencing-lane-associated differences.
+
+## Input Data
+
+The input is a tab-delimited file (`MA_mutations.txt`) containing mutation annotations for both sequencing replicates.
+
+Each row represents a mutation with the following information:
+
+| Feature | Description |
+|---|---|
+| Strain | Sequencing replicate identifier (XZ7 or XZ8) |
+| Mut_type (SNV/indel) | Mutation type |
+| CHROM, POS, REF, ALT | Genomic coordinates and alleles |
+| GC_11 bp – GC_100001 bp | GC content across five genomic windows |
+| recomb_rate | Local recombination rate |
+| distance_to_ORI | Distance to the nearest replication origin |
+| Coding context | Functional annotation of the mutation |
+| motif_3bp_mutfirst | Trinucleotide motif with mutation at the first position |
+| motif_3bp_mutlast | Trinucleotide motif with mutation at the last position |
+| motif_3bp_mutcenter | Trinucleotide motif centered on the mutation |
+| motif_5bp_center | Five-base sequence context |
+| motif_7bp_center | Seven-base sequence context |
+| motif_9bp_center | Nine-base sequence context |
+| seq_complexity (99 bp, mut center) | Local 99-bp DNA sequence |
+| mononuc? | Mononucleotide repeat annotation |
+| lead/lag | Leading/lagging strand assignment |
+| putative effect | Predicted functional effect |
+| Gene annotation | Associated gene |
+| gene_expressed_germline | Germline expression annotation |
+
+### Data preprocessing
+
+- Only mutations from XZ7 and XZ8 are retained.
+- Duplicate records within each replicate are removed based on `CHROM`, `POS`, `REF`, and `ALT`.
+- Mutations with multiple coding consequence annotations are assigned the first annotation. For example, `frameshift_variant&splice_donor_variant&intron_variant` is converted to `frameshift_variant`.
+- Missing values are excluded from the corresponding feature-level analyses.
+
+## Analysis Workflow
+
+### 1. Mutation concordance
+
+Mutations are classified into three categories based on chromosome, position, reference allele, and alternative allele:
+
+- **Shared:** Detected in both XZ7 and XZ8.
+- **XZ7 only:** Detected exclusively in XZ7.
+- **XZ8 only:** Detected exclusively in XZ8.
+
+Mutation concordance is quantified using the Jaccard similarity index:
+
+\[
+J = \frac{|XZ7 \cap XZ8|}{|XZ7 \cup XZ8|}
+\]
+
+### 2. Numerical genomic feature comparison
+
+GC content across five genomic windows (11, 101, 1,001, 10,001, and 100,001 bp), recombination rate, and distance to the nearest replication origin are compared between replicate-specific mutations using two-sided Wilcoxon rank-sum tests.
+
+Distributions are visualized using boxplots for shared, XZ7-specific, and XZ8-specific mutations.
+
+### 3. Categorical genomic feature comparison
+
+Categorical features, including chromosome, coding context, mononucleotide repeat status, leading/lagging strand assignment, predicted functional effect, germline expression status, and trinucleotide motifs, are compared using Fisher's exact tests with Monte Carlo simulation (99,999 replicates).
+
+Categorical distributions are visualized as proportions within each mutation detection group. Reference allele, alternative allele, and mutation type are excluded from categorical plots, although mutation type is retained in the statistical analysis.
+
+### 4. Sequence complexity analysis
+
+Local sequence complexity is calculated using Shannon entropy based on nucleotide frequencies in the 99-bp sequence surrounding each mutation:
+
+\[
+H = -\sum_{b \in \{A,C,G,T\}} p_b \log_2(p_b)
+\]
+
+Differences in Shannon entropy between replicate-specific mutation sets are evaluated using the Wilcoxon rank-sum test.
+
+### 5. SNV mutation spectrum
+
+Single-nucleotide variants are normalized to the pyrimidine reference strand and classified into six substitution categories:
+
+`C>A`, `C>G`, `C>T`, `T>A`, `T>C`, and `T>G`.
+
+Substitution frequencies are calculated separately for shared, XZ7-specific, and XZ8-specific mutations. Differences between replicate-specific mutation spectra are evaluated using Fisher's exact test with Monte Carlo simulation.
+
+### 6. Sequence motif analysis
+
+The distributions of trinucleotide motifs are examined, and the 20 most frequent 5-bp, 7-bp, and 9-bp motifs are visualized separately. Extended motif analyses are descriptive.
+
+### 7. Multiple-testing correction
+
+P-values from feature-level statistical comparisons are adjusted using the Benjamini–Hochberg false discovery rate (FDR) procedure. An adjusted P-value below 0.05 is used as the exploratory significance threshold.
+
+Because XZ7 and XZ8 originate from the same MA line, statistical comparisons are interpreted as exploratory assessments of mutation detection differences rather than independent biological tests.
+
+## Requirements
+
+The analysis is implemented in R using the following packages:
+
+- `tidyverse`
+- `patchwork`
+
+## Running the Analysis
+
+1. Place the input file `MA_mutations.txt` in the working directory.
+2. Update the input file path in the R script if necessary.
+3. Run the analysis script:
+
+```bash
+Rscript XZ7_XZ8_analysis.R
+```
+
+The script automatically creates the `XZ7_XZ8_Analysis` directory containing graphs and statistical results.
+
+## Output Files
+
+```text
+XZ7_XZ8_Analysis/
+├── Graphs/
+│   ├── 01_Mutation_overlap.jpg
+│   ├── 02_Numerical_features.jpg
+│   ├── 03_Shannon_entropy.jpg
+│   ├── 04_SNV_spectrum.jpg
+│   ├── 05_Feature_FDR_comparison.jpg
+│   ├── Numeric_*.jpg
+│   ├── Categorical_*.jpg
+│   └── Motif_*.jpg
+│
+└── Tables/
+    ├── All_statistical_results.csv
+    ├── Numeric_results.csv
+    ├── Categorical_results.csv
+    ├── All_unique_mutations.csv
+    ├── Lane_specific_mutations.csv
+    ├── Overlap_metrics.csv
+    ├── SNV_spectrum.csv
+    ├── Duplicate_records.csv
+    └── Motif_*.csv
+```
+
+All figures are saved in JPG format at 300 dpi.
+
+## Interpretation and Limitations
+
+This analysis is designed to evaluate mutation detection consistency between sequencing lanes of the same MA line. Shared mutations are counted once in feature-level summaries, and statistical comparisons focus on replicate-specific mutations.
+
+Differences in genomic features may reflect sequencing coverage, mapping quality, variant-calling sensitivity, or filtering rather than biological differences. The analyses do not directly estimate mutation rates or establish causal sequencing-lane effects.
+
+Additional analyses incorporating read depth, alternate allele counts, variant allele fractions, and callable genomic regions are recommended for a more comprehensive evaluation of sequencing reproducibility.
