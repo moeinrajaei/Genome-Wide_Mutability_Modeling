@@ -8,7 +8,7 @@ The analysis evaluates mutation detection concordance, identifies shared and rep
 
 ## Input Data
 
-The input is a tab-delimited file (`MA_mutations.txt`) containing mutation annotations for both sequencing replicates.
+The input is a tab-delimited file (`XZ7_XZ8_Masterfile.txt`) containing mutation annotations for both sequencing replicates.
 
 Each row represents a mutation with the following information:
 
