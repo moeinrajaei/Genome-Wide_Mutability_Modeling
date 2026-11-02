@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains R scripts for comparing mutation profiles and genomic features between two sequencing replicates (XZ7 and XZ8) of the same mutation-accumulation (MA) line.
+This folder contains R scripts for comparing mutation profiles and genomic features between two sequencing replicates (XZ7 and XZ8) of the same mutation-accumulation (MA) line.
 
 The analysis evaluates mutation detection concordance, identifies shared and replicate-specific mutations, and compares their genomic characteristics to investigate potential sequencing-lane-associated differences.
 
