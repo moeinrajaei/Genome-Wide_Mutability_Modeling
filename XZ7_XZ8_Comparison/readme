@@ -1,3 +1,4 @@
+
 # Genomic Feature Comparison Between Sequencing Replicates
 
 ## Overview
@@ -6,7 +7,7 @@ This R script compares mutation profiles and genomic features between two sequen
 
 ## Analysis
 
-**1. Mutation concordance**
+### 1. Mutation Concordance
 
 Mutations are classified based on chromosome, position, reference allele, and alternative allele into three groups:
 
@@ -16,27 +17,27 @@ Mutations are classified based on chromosome, position, reference allele, and al
 
 Concordance is quantified using the Jaccard similarity index.
 
-**2. Numerical genomic features**
+### 2. Numerical Genomic Features
 
 GC content (11, 101, 1,001, 10,001, and 100,001 bp), recombination rate, and distance to the nearest replication origin are compared using two-sided Wilcoxon rank-sum tests.
 
-**3. Categorical genomic features**
+### 3. Categorical Genomic Features
 
 Chromosome, coding context, mononucleotide repeat status, leading/lagging strand, predicted functional effect, germline expression, and trinucleotide sequence context are compared using Fisher's exact tests with Monte Carlo simulation (99,999 replicates).
 
 For mutations with multiple coding annotations separated by `&`, only the first annotation is retained.
 
-**4. Sequence complexity**
+### 4. Sequence Complexity
 
 Shannon entropy is calculated from nucleotide frequencies within the 99-bp sequence surrounding each mutation. Differences are evaluated using the Wilcoxon rank-sum test.
 
-**5. Mutation spectrum and sequence motifs**
+### 5. Mutation Spectrum and Sequence Motifs
 
-SNVs are normalized to six pyrimidine-based substitution classes (C>A, C>G, C>T, T>A, T>C, and T>G). Mutation spectra are compared using Fisher's exact test. The frequencies of 3-bp, 5-bp, 7-bp, and 9-bp sequence motifs are also examined.
+SNVs are normalized to six pyrimidine-based substitution classes (`C>A`, `C>G`, `C>T`, `T>A`, `T>C`, and `T>G`). Mutation spectra are compared using Fisher's exact test. The frequencies of 3-bp, 5-bp, 7-bp, and 9-bp sequence motifs are also examined.
 
-**6. Multiple-testing correction**
+### 6. Multiple-Testing Correction
 
-P-values are adjusted using the Benjamini–Hochberg false discovery rate (FDR) procedure, with FDR < 0.05 used as the exploratory significance threshold.
+P-values are adjusted using the Benjamini–Hochberg false discovery rate (FDR) procedure, with `FDR < 0.05` used as the exploratory significance threshold.
 
 ## Requirements
 
@@ -50,9 +51,7 @@ The input is a tab-delimited mutation annotation file (`MA_mutations.txt`) conta
 
 Run the script using:
 
-```bash
-Rscript XZ7_XZ8_analysis.R
-```
+    Rscript XZ7_XZ8_analysis.R
 
 ## Output
 
