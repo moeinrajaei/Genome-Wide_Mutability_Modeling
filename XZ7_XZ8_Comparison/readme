@@ -1,7 +1,7 @@
 
-# Genomic Feature Comparison Between Sequencing Replicates
+#Genomic Feature Comparison Between Sequencing Replicates
 
-## Overview
+##Overview
 
 This R script compares mutation profiles and genomic features between two sequencing replicates (XZ7 and XZ8) of the same mutation-accumulation (MA) line. The analysis evaluates mutation concordance and differences in genomic characteristics between shared and replicate-specific mutations.
 
